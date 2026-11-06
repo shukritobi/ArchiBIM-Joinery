@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ArchiBIM Joinery</title><style>
+:root{font-family:system-ui,"Segoe UI",Arial,sans-serif;font-size:13px;color:#dde3e8;background:#141b22}
+*{box-sizing:border-box}body{margin:0}header{background:#1e2b35;padding:17px 18px;border-bottom:1px solid #34424c}
+h1{font-size:19px;margin:0 0 5px;font-weight:680;letter-spacing:-.5px}small,.muted{color:#9daeb9}main{padding:16px 18px 32px}
+section{border:1px solid #34424c;border-radius:9px;margin:0 0 12px;background:#1a242d;padding:13px}section h2{margin:0 0 12px;font-size:13px;font-weight:700;color:#e3e8ea}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px 11px}.span2{grid-column:span 2}
+label{display:flex;flex-direction:column;gap:4px;color:#bfcdd6;font-size:11px;letter-spacing:.1px}
+input,select{width:100%;height:33px;border-radius:5px;border:1px solid #41535f;background:#101820;color:#edf2f4;padding:0 9px;font-size:13px}
+input:focus,select:focus{outline:1px solid #31b6aa}.check{flex-direction:row;align-items:center;gap:7px;font-size:12px}.check input{height:15px;width:15px}
+.buttons{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}button{border-radius:6px;background:#2a3a45;border:1px solid #4a5d69;color:#ecf3f7;padding:9px 11px;font-size:12px;cursor:pointer;font-weight:650}button.primary{background:#138d88;border-color:#20a9a2;color:white}button:hover{filter:brightness(1.2)}
+.status{line-height:1.65;font-size:12px;color:#b5c7cf}strong{color:#f4f7fa}.tip{font-size:11px;color:#a7b7c2;line-height:1.55;margin:9px 0 0}.topline{display:flex;justify-content:space-between;align-items:center}
+.badge{font-size:10px;color:#9de1db;background:#1a4f4d;padding:4px 7px;border-radius:4px;white-space:nowrap}#selected-id{word-break:break-all}
+</style></head><body>
+<header><div class="topline"><h1>ArchiBIM <span style="color:#5bd2c9">Joinery</span></h1><span class="badge">BETA 0.1.0</span></div><small>Parametric Cabinets · Desks · Built-ins</small></header>
+<main>
+<section><h2>Cabinet Library</h2><div class="grid">
+<label class="span2">Cabinet / built-in family<select id="kind"><option value="base">Base Unit</option><option value="wall">Wall / Overhead Unit</option><option value="tall">Tall Unit / Pantry</option><option value="desk">Desk / Workstation</option><option value="wardrobe">Wardrobe</option><option value="vanity">Vanity Cabinet</option><option value="bookcase">Bookcase / Shelving</option><option value="tv_console">TV Console</option><option value="reception">Reception Counter</option></select></label>
+<label class="span2">Description / name<input id="name" type="text" maxlength="120"></label>
+<label>Width (mm)<input id="width" type="number" min="100"></label>
+<label>Overall height (mm)<input id="height" type="number" min="100"></label>
+<label>Overall depth (mm)<input id="depth" type="number" min="100"></label>
+<label>Mount height above host floor (mm)<input id="mount_height" type="number" min="0"></label>
+</div><p class="tip">Base height is measured to the top of the worktop. For a wall cabinet, 1450 mm mounting height gives a 600 mm clear gap above an 850 mm countertop.</p></section>
+<section><h2>Construction & Materials</h2><div class="grid">
+<label>Carcass panels (mm)<input id="panel_thickness" type="number" min="1"></label>
+<label>Door/front panels (mm)<input id="front_thickness" type="number" min="1"></label>
+<label>Back panel (mm)<input id="back_thickness" type="number" min="0"></label>
+<label>Back recess (mm)<input id="back_recess" type="number" min="0"></label>
+<label>Toe kick height (mm)<input id="toe_height" type="number" min="0"></label>
+<label>Toe recess (mm)<input id="toe_recess" type="number" min="0"></label>
+<label>Worktop thickness (mm)<input id="top_thickness" type="number" min="0"></label>
+<label>Desk support thickness (mm)<input id="support_thickness" type="number" min="1"></label>
+<label>Carcass / front material<input id="material" type="text"></label>
+<label>Countertop material<input id="top_material" type="text"></label>
+<label>Back style<select id="back"><option value="inset">Inset back</option><option value="applied">Applied back</option><option value="none">No back (open)</option></select></label>
+<label>Front type<select id="front"><option value="open">Open</option><option value="doors">Doors</option><option value="drawers">Drawers</option><option value="combo">Top drawer + doors</option></select></label>
+</div></section>
+<section><h2>Internal Layout & Finishes</h2><div class="grid">
+<label>Shelf rows<input id="shelves" type="number" min="0" max="40"></label>
+<label>Vertical divisions<input id="divisions" type="number" min="0" max="40"></label>
+<label>Doors<input id="door_count" type="number" min="1" max="12"></label>
+<label>Drawers<input id="drawer_count" type="number" min="1" max="40"></label>
+<label>Reveal / gap (mm)<input id="door_gap" type="number" min="0" step="0.5"></label>
+<label>Physical backsplash height (mm)<input id="backsplash_height" type="number" min="0"></label>
+<label>Left filler (mm)<input id="filler_left" type="number" min="0"></label>
+<label>Right filler (mm)<input id="filler_right" type="number" min="0"></label>
+<label class="check"><input id="end_panel_left" type="checkbox">Finished left end panel</label>
+<label class="check"><input id="end_panel_right" type="checkbox">Finished right end panel</label>
+</div>
+<div class="buttons"><button class="primary" onclick="place()">Place New Unit</button><button onclick="edit()">Update Selected Cabinet</button><button onclick="window.sketchup.ready()">Load Selected</button></div>
+<p class="tip">Generated panels remain separate named SketchUp groups with joinery metadata. Update Selected regenerates the assembly from its parameters.</p></section>
+<section><h2>ArchiBIM Wall Hosting</h2>
+<div class="grid"><label>Room / exposed wall face<select id="side"><option value="left">Left side of wall</option><option value="right">Right side of wall</option></select></label>
+<label>Resize policy<select id="mode"><option value="fixed">Fixed cabinet width</option><option value="stretch">Stretch to wall end</option></select></label></div>
+<div class="buttons"><button class="primary" onclick="bind()">Bind to Selected Wall</button><button onclick="window.sketchup.detach()">Detach</button><button onclick="window.sketchup.sync()">Sync Walls</button></div>
+<label class="check" style="margin-top:13px"><input id="auto" type="checkbox" checked onchange="window.sketchup.auto_sync(this.checked)">Auto-sync after model edits</label>
+<p class="tip">To bind: Ctrl-select one generated cabinet AND one ArchiBIM wall in SketchUp, choose exposed face, then Bind. The cabinet snaps its back to the wall's physical face. Auto-sync executes after a completed SketchUp operation, not during dragging.</p>
+</section>
+<section><h2>Quantities & Diagnostics</h2><div id="status" class="status">Open a model or select a cabinet.</div>
+<div class="buttons"><button onclick="window.sketchup.export()">Export Preliminary Cutlist CSV</button><button onclick="window.sketchup.schedule()">Export BIM Cabinet Schedule CSV</button></div>
+<p class="tip">Manufacturing dimensions and 13 mm drawer-runner allowances are provisional. Confirm specified hardware, joinery, grain direction, edge banding and panel machining before sending to fabrication.</p></section>
+</main>
+<script>
+'use strict';
+const nums='width height depth mount_height panel_thickness front_thickness back_thickness back_recess toe_height toe_recess top_thickness support_thickness door_gap shelves drawer_count door_count divisions filler_left filler_right backsplash_height'.split(' ');
+const texts='kind name material top_material front back'.split(' ');
+let didLoadSelection=false;
+const el=id=>document.getElementById(id);
+function collect(){const out={};for(const id of nums) out[id]=Number(el(id).value);for(const id of texts)out[id]=el(id).value;for(const id of ['end_panel_left','end_panel_right'])out[id]=el(id).checked;return out}
+function fill(p){for(const id of nums){if(p[id]!==undefined)el(id).value=p[id]}for(const id of texts){if(p[id]!==undefined)el(id).value=p[id]}for(const id of ['end_panel_left','end_panel_right']){if(p[id]!==undefined)el(id).checked=!!p[id]}}
+function place(){window.sketchup.place(JSON.stringify(collect()))}function edit(){window.sketchup.edit(JSON.stringify(collect()))}
+function bind(){window.sketchup.bind(el('side').value,el('mode').value)}
+window.joineryPreset=function(p){fill(p);didLoadSelection=false};
+window.joineryRefresh=function(payload){
+ el('auto').checked=!!payload.auto_sync;
+ const d=payload.selected;
+ if(d){
+   fill(d.params);didLoadSelection=true;
+   el('status').innerHTML='<strong>Selected:</strong> '+safe(d.params.name)+'<br><span class="muted">'+safe(d.id)+'<br>Host: '+safe(d.anchor ? d.anchor.wall_id : 'Not bound')+'</span><br>'+payload.cabinet_count+' cabinet(s); '+payload.wall_count+' ArchiBIM wall(s).';
+ }else{
+   el('status').textContent=payload.cabinet_count+' cabinet(s), '+payload.wall_count+' ArchiBIM wall(s). No Joinery cabinet selected.';
+ }
+};
+function safe(v){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+el('kind').addEventListener('change',()=>window.sketchup.preset(el('kind').value));
+window.sketchup.preset('base');
+window.sketchup.ready();
+</script></body></html>
