@@ -1,0 +1,23 @@
+name: Joinery CI
+on:
+  push:
+  pull_request:
+jobs:
+  ruby:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+      - name: Ruby syntax check
+        run: |
+          find . -type f -name '*.rb' -print0 | xargs -0 -n1 ruby -c
+      - name: Parameter engine tests
+        run: ruby test/test_core.rb
+      - name: Build SketchUp RBZ
+        run: ruby build.rb
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ArchiBIM-Joinery-rbz
+          path: dist/*.rbz
