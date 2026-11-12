@@ -13,10 +13,10 @@ input:focus,select:focus{outline:1px solid #31b6aa}.check{flex-direction:row;ali
 .status{line-height:1.65;font-size:12px;color:#b5c7cf}strong{color:#f4f7fa}.tip{font-size:11px;color:#a7b7c2;line-height:1.55;margin:9px 0 0}.topline{display:flex;justify-content:space-between;align-items:center}
 .badge{font-size:10px;color:#9de1db;background:#1a4f4d;padding:4px 7px;border-radius:4px;white-space:nowrap}#selected-id{word-break:break-all}
 </style></head><body>
-<header><div class="topline"><h1>ArchiBIM <span style="color:#5bd2c9">Joinery</span></h1><span class="badge">BETA 0.1.0</span></div><small>Parametric Cabinets · Desks · Built-ins</small></header>
+<header><div class="topline"><h1>ArchiBIM <span style="color:#5bd2c9">Joinery</span></h1><span class="badge">BETA 0.2.0</span></div><small>Parametric Cabinets · Desks · Built-ins</small></header>
 <main>
 <section><h2>Cabinet Library</h2><div class="grid">
-<label class="span2">Cabinet / built-in family<select id="kind"><option value="base">Base Unit</option><option value="wall">Wall / Overhead Unit</option><option value="tall">Tall Unit / Pantry</option><option value="desk">Desk / Workstation</option><option value="wardrobe">Wardrobe</option><option value="vanity">Vanity Cabinet</option><option value="bookcase">Bookcase / Shelving</option><option value="tv_console">TV Console</option><option value="reception">Reception Counter</option></select></label>
+<label class="span2">Cabinet / built-in family<select id="kind"><optgroup label="Kitchen Cabinets"><option value="base">Base Unit</option><option value="wall">Wall / Overhead Unit</option><option value="tall">Tall Unit / Pantry</option><option value="fridge_tall">Fridge Tall Unit</option><option value="oven_tall">Oven Tall Unit</option><option value="microwave_tall">Microwave Tall Unit</option></optgroup><optgroup label="Other Built-ins"><option value="desk">Desk / Workstation</option><option value="wardrobe">Wardrobe</option><option value="vanity">Vanity Cabinet</option><option value="bookcase">Bookcase / Shelving</option><option value="tv_console">TV Console</option><option value="reception">Reception Counter</option></optgroup></select></label>
 <label class="span2">Description / name<input id="name" type="text" maxlength="120"></label>
 <label>Width (mm)<input id="width" type="number" min="100"></label>
 <label>Overall height (mm)<input id="height" type="number" min="100"></label>
@@ -51,7 +51,29 @@ input:focus,select:focus{outline:1px solid #31b6aa}.check{flex-direction:row;ali
 </div>
 <div class="buttons"><button class="primary" onclick="place()">Place New Unit</button><button onclick="edit()">Update Selected Cabinet</button><button onclick="window.sketchup.ready()">Load Selected</button></div>
 <p class="tip">Generated panels remain separate named SketchUp groups with joinery metadata. Update Selected regenerates the assembly from its parameters.</p></section>
+<section><h2>Doors, Handles &amp; Appliance Units</h2><div class="grid">
+<label class="check"><input id="floor_finish_panels" type="checkbox" checked>Floor-length fillers &amp; end panels</label>
+<label class="check"><input id="auto_doors" type="checkbox" checked>Auto split doors to max width</label>
+<label>Maximum door width (mm)<input id="max_door_width" type="number" min="200" max="1500"></label>
+<label>Hardware / edge style<select id="handle_style"><option value="none">No handle</option><option value="edge_45">45-degree integrated edge</option><option value="bar">Shop-bought bar pull</option><option value="knob">Shop-bought knob</option></select></label>
+<label>Handle offset from opening edge (mm)<input id="handle_offset" type="number" min="0"></label>
+<label>Bar handle screw centres (mm)<input id="handle_cc" type="number" min="0"></label>
+<label>Appliance nominal width (mm)<input id="appliance_width" type="number" min="0"></label>
+<label>Appliance nominal height (mm)<input id="appliance_height" type="number" min="0"></label>
+<label>Appliance opening bottom (mm)<input id="appliance_bottom" type="number" min="0"></label>
+<label>Appliance side clearance / side (mm)<input id="appliance_side_clearance" type="number" min="0"></label>
+<label>Appliance rear clearance (mm)<input id="appliance_rear_clearance" type="number" min="0"></label>
+<label>Storage above appliance<select id="upper_storage"><option value="none">None</option><option value="open">Open</option><option value="doors">Closed doors</option></select></label>
+<label class="check"><input id="box_up" type="checkbox">Box up to ceiling</label>
+<label>Ceiling level above floor (mm)<input id="ceiling_height" type="number" min="0"></label>
+</div><p class="tip">Appliance dimensions are placeholders, not appliance installation approvals. Check exact model's cutout, airflow, power and door swing instructions. A 45-degree style bevels the meeting edge of generated door panels.</p></section>
+<section><h2>Scale &amp; 2D Documentation</h2>
+<p class="tip">Use SketchUp's native Scale tool, then select the cabinet and click Refresh. The body is rebuilt at the new width/depth/height while keeping panel material thickness unchanged. Mirroring and shear are not supported.</p>
+<div class="buttons"><button class="primary" onclick="window.sketchup.scale_refresh()">Refresh After Native Scale</button><button onclick="window.sketchup.dxf()">Selected DXF (Plan + Elevation)</button><button onclick="window.sketchup.dxf_all()">Batch DXF for All Cabinets</button><button onclick="window.sketchup.mcp_json()">Export AI / MCP JSON</button></div>
+<p class="tip">Opening symbols are placed on the ABJ | 2D Elevation Openings tag (off by default for clean 3D views). Turn it on in a front orthographic SketchUp scene or LayOut viewport; dashed opening marks are always included in DXF exports.</p>
+</section>
 <section><h2>ArchiBIM Wall Hosting</h2>
+<label class="check" style="margin-bottom:10px"><input id="auto_wall_orient" type="checkbox" checked>Automatically detect nearest ArchiBIM wall and orient back to wall during placement</label>
 <div class="grid"><label>Room / exposed wall face<select id="side"><option value="left">Left side of wall</option><option value="right">Right side of wall</option></select></label>
 <label>Resize policy<select id="mode"><option value="fixed">Fixed cabinet width</option><option value="stretch">Stretch to wall end</option></select></label></div>
 <div class="buttons"><button class="primary" onclick="bind()">Bind to Selected Wall</button><button onclick="window.sketchup.detach()">Detach</button><button onclick="window.sketchup.sync()">Sync Walls</button></div>
@@ -64,11 +86,11 @@ input:focus,select:focus{outline:1px solid #31b6aa}.check{flex-direction:row;ali
 </main>
 <script>
 'use strict';
-const nums='width height depth mount_height panel_thickness front_thickness back_thickness back_recess toe_height toe_recess top_thickness support_thickness door_gap shelves drawer_count door_count divisions filler_left filler_right backsplash_height'.split(' ');
-const texts='kind name material top_material front back'.split(' ');
+const nums='width height depth mount_height panel_thickness front_thickness back_thickness back_recess toe_height toe_recess top_thickness support_thickness door_gap shelves drawer_count door_count divisions filler_left filler_right backsplash_height max_door_width handle_offset handle_cc ceiling_height appliance_width appliance_height appliance_bottom appliance_side_clearance appliance_rear_clearance'.split(' ');
+const texts='kind name material top_material front back handle_style upper_storage'.split(' ');
 let didLoadSelection=false;
 const el=id=>document.getElementById(id);
-function collect(){const out={};for(const id of nums) out[id]=Number(el(id).value);for(const id of texts)out[id]=el(id).value;for(const id of ['end_panel_left','end_panel_right'])out[id]=el(id).checked;return out}
+function collect(){const out={};for(const id of nums) out[id]=Number(el(id).value);for(const id of texts)out[id]=el(id).value;for(const id of ['end_panel_left','end_panel_right','floor_finish_panels','auto_doors','auto_wall_orient','box_up'])out[id]=el(id).checked;return out}
 function fill(p){for(const id of nums){if(p[id]!==undefined)el(id).value=p[id]}for(const id of texts){if(p[id]!==undefined)el(id).value=p[id]}for(const id of ['end_panel_left','end_panel_right']){if(p[id]!==undefined)el(id).checked=!!p[id]}}
 function place(){window.sketchup.place(JSON.stringify(collect()))}function edit(){window.sketchup.edit(JSON.stringify(collect()))}
 function bind(){window.sketchup.bind(el('side').value,el('mode').value)}
