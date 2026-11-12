@@ -18,7 +18,7 @@ module SSDigitalLab
         p=C.normalize(raw)
         segments=rectangle(0,0,p['width'],p['height'], 'ABJ_ELEVATION')
         C.parts(p).each do |part|
-          next unless %w[door drawer_front filler finish box_up].include?(part['role'])
+          next unless %w[door drawer_front filler finish box_up skirting].include?(part['role'])
           x=part['x']; z=part['z']; w=part['w']; h=part['h']
           segments.concat(rectangle(x,z,x+w,z+h,'ABJ_ELEVATION'))
         end
