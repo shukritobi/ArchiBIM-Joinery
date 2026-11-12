@@ -8,6 +8,7 @@ module SSDigitalLab
       APPLIANCES = %w[fridge_tall oven_tall microwave_tall].freeze
       HANDLE_STYLES = %w[none bar knob edge_45].freeze
       UPPER_STORAGE = %w[none open doors].freeze
+      RUNNER_TYPES = %w[none generic side_mount blum_movento hettich_quadro].freeze
       old_kinds = const_get(:KINDS)
       remove_const(:KINDS)
       const_set(:KINDS, (old_kinds + APPLIANCES).freeze)
@@ -27,19 +28,23 @@ module SSDigitalLab
                       'auto_wall_orient'=>true,'box_up'=>false,'ceiling_height'=>3000,
                       'appliance_width'=>0,'appliance_height'=>0,'appliance_bottom'=>0,
                       'appliance_side_clearance'=>4,'appliance_rear_clearance'=>50,
-                      'upper_storage'=>'none'}
+                      'upper_storage'=>'none',
+                      'drawer_shadow_gap'=>20,'runner_type'=>'generic',
+                      'runner_length'=>450,'runner_clearance'=>13,
+                      'top_skirting'=>false,'top_skirting_height'=>50}
           defaults.merge(p) # family-specific appliance dimensions and upper storage win
         end
 
         def normalize(raw)
           p = super
           defaults = presets(p['kind'])
-          %w[floor_finish_panels auto_doors auto_wall_orient box_up].each do |key|
+          %w[floor_finish_panels auto_doors auto_wall_orient box_up top_skirting].each do |key|
             val = raw.fetch(key, defaults.fetch(key))
             p[key] = (val == true || val.to_s == 'true')
           end
           %w[max_door_width handle_offset handle_cc ceiling_height appliance_width appliance_height
-             appliance_bottom appliance_side_clearance appliance_rear_clearance].each do |key|
+             appliance_bottom appliance_side_clearance appliance_rear_clearance
+             drawer_shadow_gap runner_length runner_clearance top_skirting_height].each do |key|
             lo = key == 'max_door_width' ? 200 : 0
             p[key] = value(defaults.merge(raw), key, lo, 100_000)
           end
@@ -47,6 +52,18 @@ module SSDigitalLab
           raise ArgumentError, 'Unsupported handle style' unless HANDLE_STYLES.include?(p['handle_style'])
           p['upper_storage'] = raw.fetch('upper_storage', defaults['upper_storage']).to_s
           raise ArgumentError, 'Unsupported upper storage' unless UPPER_STORAGE.include?(p['upper_storage'])
+          p['runner_type'] = raw.fetch('runner_type', defaults['runner_type']).to_s
+          raise ArgumentError, 'Unsupported drawer runner type' unless RUNNER_TYPES.include?(p['runner_type'])
+          if p['top_skirting'] && p['top_thickness'] < 1
+            raise ArgumentError, 'Top skirting requires a nonzero countertop thickness'
+          end
+          if %w[drawers combo].include?(p['front'])
+            case_height = p['height']-p['toe_height']-p['top_thickness']
+            usable_height = p['front']=='combo' ? [case_height*0.3,130.0].max : case_height
+            tier_count = p['front']=='combo' ? 1 : p['drawer_count']
+            raise ArgumentError, 'Drawer shadow gap too large for tier count' if
+              usable_height < tier_count * (p['drawer_shadow_gap']+65)
+          end
           if p['auto_doors'] && %w[doors combo].include?(p['front'])
             opening = case_width(p)
             minimum = [(opening / (p['max_door_width']+p['door_gap'])).ceil, 1].max
@@ -98,6 +115,13 @@ module SSDigitalLab
               add_part(result,'boxup-front','Front Ceiling Box-up',t,0,z,w-2*t,t,extra,'box_up',p)
               add_part(result,'boxup-back','Rear Ceiling Box-up',t,d-t,z,w-2*t,t,extra,'box_up',p)
             end
+          end
+          if p['top_skirting']
+            # Upstand on rear edge of the worktop, matching its exact thickness.
+            add_part(result,'top-skirting','Rear Countertop Skirting',0,
+                     p['depth']-p['top_thickness'],p['height'],p['width'],
+                     p['top_thickness'],p['top_skirting_height'],'skirting',p,
+                     {'material'=>p['top_material']})
           end
           add_handles(result,p)
           result
@@ -165,10 +189,15 @@ module SSDigitalLab
           doors=result.select { |r| r['role']=='door' }
           case p['handle_style']
           when 'edge_45'
-            doors.each_with_index do |door,i|
-              door['profile']='edge_45'
-              door['profile_side']=i.even? ? 'right' : 'left'
+            # Top-edge grip below a continuous 20 mm shadow-line, never at
+            # the vertical meeting edges of doors.
+            (doors + result.select { |r| r['role']=='drawer_front' }).each do |door|
+              door['profile']='edge_45_top'
               door['bevel_mm']=[p['front_thickness']*0.65,12].min.round(2)
+              if door['role']=='door'
+                adjustment=[20.0 - p['door_gap'], 0.0].max
+                door['h']=(door['h']-adjustment).round(4)
+              end
             end
           when 'bar','knob'
             doors.each_with_index do |door,i|
@@ -179,17 +208,17 @@ module SSDigitalLab
               if p['handle_style']=='bar'
                 length=[p['handle_cc']+24,door['h']-20].min
                 add_part(result,"handle-#{door['key']}","Bar Handle #{door['name']}",x-6,-28,z-length/2,
-                         12,12,length,'handle',p,{'material'=>'Brushed Steel'})
+                         12,12,length,'handle',p,{'material'=>'Brushed Steel','shape'=>'cylinder'})
                 cc=[p['handle_cc']/2.0,length/2-8].min
                 [-cc,cc].each_with_index do |offset,j|
                   add_part(result,"standoff-#{door['key']}-#{j+1}","Handle Post",x-4,-16,z+offset-4,
-                           8,16,8,'handle',p,{'material'=>'Brushed Steel'})
+                           8,16,8,'handle',p,{'material'=>'Brushed Steel','shape'=>'cylinder'})
                 end
               else
                 add_part(result,"handle-#{door['key']}","Knob #{door['name']}",x-12,-26,z-12,
-                         24,22,24,'handle',p,{'material'=>'Brushed Steel'})
+                         24,22,24,'handle',p,{'material'=>'Brushed Steel','shape'=>'cylinder'})
                 add_part(result,"standoff-#{door['key']}","Knob Post",x-5,-4,z-5,
-                         10,4,10,'handle',p,{'material'=>'Brushed Steel'})
+                         10,4,10,'handle',p,{'material'=>'Brushed Steel','shape'=>'cylinder'})
               end
             end
           end
@@ -197,19 +226,19 @@ module SSDigitalLab
             result.select { |r| r['role']=='drawer_front' }.each do |dr|
               length=[p['handle_cc']+24,dr['w']-20].min
               add_part(result,"handle-#{dr['key']}","Drawer Bar #{dr['name']}",dr['x']+dr['w']/2-length/2,-28,
-                       dr['z']+dr['h']/2-6,length,12,12,'handle',p,{'material'=>'Brushed Steel'})
+                       dr['z']+dr['h']/2-6,length,12,12,'handle',p,{'material'=>'Brushed Steel','shape'=>'cylinder'})
               cc=[p['handle_cc']/2.0,length/2-8].min
               [-cc,cc].each_with_index do |offset,j|
                 add_part(result,"standoff-#{dr['key']}-#{j+1}","Drawer Pull Post",
                          dr['x']+dr['w']/2+offset-4,-16,dr['z']+dr['h']/2-4,
-                         8,16,8,'handle',p,{'material'=>'Brushed Steel'})
+                         8,16,8,'handle',p,{'material'=>'Brushed Steel','shape'=>'cylinder'})
               end
             end
           end
         end
 
         def cutlist(raw)
-          super.reject { |item| item['role']=='handle' } # hardware should use its own fittings schedule
+          super.reject { |item| %w[handle drawer_runner].include?(item['role']) } # hardware should use its own fittings schedule
         end
 
         def find_near_wall(walls,point,p,max_distance=350.0)

@@ -29,6 +29,23 @@ Status below refers to repository code and pure-Ruby tests, **not** desktop cert
 | 9. 2D plans and elevations | Beta | one DXF per selected cabinet or batch, with separately layered mm plan/elevation lines and dashed door swings; tags available for LayOut views. Each cabinet also contains native SketchUp 2D elevation and plan line groups, hidden on separate tags until enabled in orthographic scenes. No shop-ready dimensions, sections, annotations, fabrication holes or .layout document generation yet. |
 | 10. MCP / AI integration | Foundation | Export read-only structured JSON for ID, family, parameters, wall host, parts and linework. **Not an MCP server** and no autonomous write tools yet. |
 
+## v0.2.1 QA-driven improvements (2026-11-12)
+Status: implemented in code and regression tests; desktop SketchUp 2026 validation outstanding.
+
+| Request | Implementation | Caveat |
+|---|---|---|
+| Scale tool does not parametric-update | Refresh Native Scale absorbs committed group transformation and rebuilds from fixed-thickness panels; direct W/D/H Resize fallback | Scale must be committed and outer cabinet group selected; runtime confirmation required |
+| Keep relevant UI options without permanent hiding | Cabinet-dependent controls greyed; optional override preserves advanced control access | UI usability testing still required |
+| 45° handle after 20 mm shadow line | Continuous top horizontal grip on doors and drawers | True extruded bevel; manufacturing routing profile not certified |
+| Rounded hardware | Cylindrical bar pulls and round knobs with stems | Conceptual hardware dimensions |
+| Put create/update at top | Sticky toolbar | Small window review needed |
+| Drawer tier shadow gaps | Configurable equal reveals, default 20 mm | Manufacturer/shop-specific reveals should be reviewed |
+| Drawer railing options | None/generic/side-mount/Blum MOVENTO/Hettich Quadro with length and side allowances | Indicative models, not SKU drilling patterns |
+| 2D drawer linework | Front tier outlines + dashed pull chevrons; one representative tray/runner plan | DXF/SketchUp tags need LayOut round trip |
+| Countertop skirting | Optional 50 mm rear upstand, 0–200 mm height slider, thickness follows countertop | Wall/splash hardware clearances require coordination |
+
+[Full implementation and research log](DEVELOPMENT_LOG_v0.2.1.md).
+
 ## Next releases
 ### v0.2.1  Desktop validation and hardening (priority)
 - SketchUp 2026 tests: actual placement and nearest wall orientation, end panel floor levels,

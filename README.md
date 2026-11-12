@@ -8,9 +8,20 @@
 
 This is a permanent download link. After a successful build on `main`, GitHub Actions updates the release asset automatically. The latest version is always shown here first.
 
-**Standalone SketchUp Ruby extension | Beta | SS Digital Lab**
+**Standalone SketchUp Ruby extension | v0.2.1 Beta | SS Digital Lab**
 
 A parametric BIM companion for [ArchiBIM](https://github.com/shukritobi/ArchiBIM), creating distinct panel-built assemblies rather than decorative single-mesh boxes.
+
+## What's new in v0.2.1 beta
+
+- **Reliable resizing:** after SketchUp native Scale is finished, select the **outer cabinet group** and click **Refresh Native Scale** in the sticky action toolbar. All panels rebuild using stored thicknesses. If SketchUp does not report scaling on the selected outer group, edit Width/Depth/Height and use **Resize to W / D / H** instead.
+- **UI options remain available:** cabinet-specific settings grey out, with **Allow advanced / normally irrelevant controls** to override.
+- **45-degree integrated handle:** bevel at the top horizontal door/drawer edge below a 20 mm shadow line, instead of the vertical edge.
+- **Circular knobs and cylindrical bar pulls**, including simplified standoffs.
+- **Drawer tiers:** equal configurable 20 mm shadow gaps; runner profiles (generic/side-mount/MOVENTO/Quadro) and representative 2D drawer tray and slide drawings.
+- **Countertop skirting:** optional rear upstand, 50 mm default (slider up to 200 mm), thickness matches worktop.
+
+[Detailed v0.2.1 research and QA log](docs/DEVELOPMENT_LOG_v0.2.1.md). All newly generated hardware geometry is conceptual and requires on-site/brand-specific validation.
 
 ## Available parametric families
 
