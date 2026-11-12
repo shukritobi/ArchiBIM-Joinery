@@ -1,6 +1,14 @@
 # ArchiBIM Joinery
 
-**Standalone SketchUp Ruby extension | v0.2.0 beta | SS Digital Lab**
+## ⬇️ Download Latest RBZ
+
+**[Download the latest ArchiBIM Joinery SketchUp plugin (.rbz)](https://github.com/shukritobi/ArchiBIM-Joinery/releases/latest/download/ArchiBIM_Joinery_latest.rbz)**
+
+[All releases](https://github.com/shukritobi/ArchiBIM-Joinery/releases) · [Installation instructions](#installation)
+
+This is a permanent download link. After a successful build on `main`, GitHub Actions updates the release asset automatically. The latest version is always shown here first.
+
+**Standalone SketchUp Ruby extension | Beta | SS Digital Lab**
 
 A parametric BIM companion for [ArchiBIM](https://github.com/shukritobi/ArchiBIM), creating distinct panel-built assemblies rather than decorative single-mesh boxes.
 
@@ -34,7 +42,7 @@ Core defaults: **16 mm carcass melamine**, 16 mm front, 6 mm back (independently
 ## Installation
 
 1. In SketchUp Desktop (tested target: 2026), choose **Extensions > Extension Manager > Install Extension**.
-2. Select `ArchiBIM_Joinery_v0.2.0.rbz`.
+2. Select the downloaded `ArchiBIM_Joinery_latest.rbz`.
 3. Enable the extension and restart SketchUp if required.
 4. Open **Extensions > ArchiBIM Joinery > Joinery Manager**.
 
@@ -62,7 +70,7 @@ The extension can load without ArchiBIM Core; wall hosting and automatic back-to
 - Native Scale now has an explicit **Refresh After Native Scale** command. It absorbs orthogonal X/Y/Z scale factors into cabinet dimensions, restores unit scale and regenerates fixed-thickness parts. Shearing or mirroring is rejected; wall-hosted refresh retains its station and uses fixed-width mode.
 - Auto-sync is in-memory and enabled by default when the plugin loads; it can be toggled in the manager. Use a copy of important models while testing.
 
-## v0.2.0 features and workflow
+## Features introduced in v0.2.0
 
 - **Finished panels to the floor:** fillers and visible end panels extend to the cabinet's base datum by default (`floor_finish_panels` toggle). The toe kick remains recessed.
 - **Nearest ArchiBIM wall:** the back automatically aligns when placing within 350 mm of a recognized straight root-level ArchiBIM wall. Automatic orientation can be disabled; manual Bind remains.
