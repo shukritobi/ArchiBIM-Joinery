@@ -288,18 +288,29 @@ module SSDigitalLab
       end
     end
 
-    # Automatic reconstruction after the native Scale tool completes.
-    # The parametric rebuild uses a transparent operation for Undo grouping.
+    # SketchUp documents onToolStateChanged as nonstandard and coalesced.
+    # Wait until the active tool changes away from Scale (21236), then refresh.
+    # The explicit Refresh Selected menu remains a fallback when Scale stays active.
     class NativeScaleWatcher < Sketchup::ToolsObserver
       SCALE_TOOL_ID = 21236
-      def onToolStateChanged(tools, _tool_name, tool_id, state)
-        return unless tool_id == SCALE_TOOL_ID && state == 0
+
+      def onActiveToolChanged(_tools, _tool_name, tool_id)
+        if tool_id == SCALE_TOOL_ID
+          @was_scale = true
+          return
+        end
+        return unless @was_scale
+        @was_scale = false
+        UI.start_timer(0.1, false) { refresh_after_scale }
+      end
+
+      def refresh_after_scale
         joinery = SSDigitalLab::ArchiBIMJoinery
         selected = joinery.selected_cabinet
-        return unless selected
+        return unless selected && selected.valid?
         factors, = joinery::ScaleMath.decompose(selected.transformation)
         return unless joinery::ScaleMath.changed?(factors)
-        joinery.refresh_scaled_selected(transparent: true)
+        joinery.refresh_scaled_selected
       rescue StandardError => e
         SSDigitalLab::ArchiBIMJoinery.log('native_scale_auto_error', error: e.message,
           backtrace: e.backtrace&.first(8))
