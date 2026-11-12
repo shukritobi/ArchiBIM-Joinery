@@ -70,6 +70,7 @@ The extension can load without ArchiBIM Core; wall hosting and automatic back-to
 - **Hardware:** none, conceptual bar pull, knob or genuine 45-degree meeting-edge chamfer (door-only). Bar location defaults to 50 mm from door opening edge, vertically centered, and 128 mm nominal screw centres. Confirm actual handle supplier dimensions.
 - **Kitchen appliance tall units:** fridge, oven and microwave; set nominal aperture size, opening level, side and rear clearance, plus open or closed upper storage. The back of the equipment niche is left open. These are modelling presets, **not manufacturer-approved installation dimensions**.
 - **Ceiling box-up:** toggle box-up on wall, tall and appliance tall units; ceiling height uses the same floor datum as mounting height.
+- **Native LayOut linework:** every generated cabinet includes separate tagged 2D front elevation and plan line groups (hidden by default until enabled in the relevant orthographic scene), in addition to dashed opening lines.
 - **2D symbols:** independent `ABJ | 2D Elevation Openings` tag with dashed elevation swing indicators (tag hidden by default to keep 3D views clean).
 - **DXF drawings:** export front elevation + plan for selected cabinet or batch one DXF per cabinet from **Scale & 2D Documentation**. Separate layers, mm coordinates, dashed opening swing segments. Import into CAD, or include the tagged SketchUp model in LayOut.
 - **AI/MCP exchange:** export read-only JSON containing each cabinet's UUID, parameter dictionary, host ID, parts and 2D line segments. No live MCP service yet.
