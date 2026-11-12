@@ -101,9 +101,37 @@ module SSDigitalLab
       material
     end
 
+    # Preserve existing tag names, visibility and saved LayOut scenes.
+    def organize_joinery_tag(model, layer)
+      root = layer.name.include?('2D') ? 'ArchiBIM | 2D Graphics' : 'ArchiBIM | Joinery'
+      folder = model.layers.folders.find { |folder| folder.name == root } || model.layers.add_folder(root)
+      layer.folder = folder if layer.folder.nil?
+      layer
+    end
+
     def tag_for(model, role)
       name = "ABJ | #{role.to_s.split('_').map(&:capitalize).join(' ')}"
-      model.layers[name] || model.layers.add(name)
+      layer = model.layers[name] || model.layers.add(name)
+      organize_joinery_tag(model, layer)
+    end
+
+    def main_tag_for(model, data)
+      anchor = data['anchor']
+      return tag_for(model, 'joinery') unless anchor && anchor['wall_id']
+      host = model.entities.grep(Sketchup::Group).find do |item|
+        raw = item.get_attribute(ARCH_DICT, 'data')
+        next false unless raw
+        begin
+          JSON.parse(raw)['id'] == anchor['wall_id']
+        rescue JSON::ParserError
+          false
+        end
+      end
+      return tag_for(model, 'joinery') unless host
+      name = host.layer.name.to_s.split(' | ').last
+      return tag_for(model, 'joinery') if name.empty?
+      layer = model.layers["ABJ | Joinery | #{name}"] || model.layers.add("ABJ | Joinery | #{name}")
+      organize_joinery_tag(model, layer)
     end
 
     def build_geometry(group, data)
@@ -129,7 +157,7 @@ module SSDigitalLab
       end
       data['params'] = params
       group.name = "ABJ | #{params['name']} | #{data['id'].to_s[0,8]}"
-      group.layer = tag_for(model, 'joinery')
+      group.layer = main_tag_for(model, data)
       group.set_attribute(DICT, 'data', JSON.generate(data))
       group
     end
@@ -261,7 +289,8 @@ module SSDigitalLab
     def repair_duplicate_ids(model)
       seen={}
       bad=[]
-      all_cabinets(model).each do |group,data|
+      originals=all_cabinets(model)
+      originals.each do |group,data|
         uuid=data['id'].to_s
         if uuid.empty? || seen.key?(uuid)
           bad << [group,data]
@@ -269,10 +298,19 @@ module SSDigitalLab
           seen[uuid]=true
         end
       end
+      # Group.copy can omit instance metadata while sharing a definition.
+      model.entities.grep(Sketchup::Group).each do |group|
+        next if data_for(group)
+        next unless group.name.to_s.start_with?('ABJ | ')
+        src=originals.find { |source,_| source.definition==group.definition && source!=group }
+        next unless src
+        bad << [group,JSON.parse(JSON.generate(src[1]))]
+      end
       return 0 if bad.empty?
       model.start_operation('ArchiBIM Joinery: Repair copied cabinet IDs',true)
       begin
         bad.each do |group,data|
+          group.make_unique # copied groups must not modify shared geometry
           data['id']=SecureRandom.uuid
           build_geometry(group,data)
         end
