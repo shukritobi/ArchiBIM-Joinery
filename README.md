@@ -1,5 +1,13 @@
 # ArchiBIM Joinery
 
+## ⬇️ Download Latest RBZ
+
+**[Download the latest ArchiBIM Joinery SketchUp plugin (.rbz)](https://github.com/shukritobi/ArchiBIM-Joinery/releases/latest/download/ArchiBIM_Joinery_latest.rbz)**
+
+[All releases](https://github.com/shukritobi/ArchiBIM-Joinery/releases) · [Installation instructions](#installation)
+
+This is a permanent download link. After a successful build on `main`, GitHub Actions updates the release asset automatically. The latest version is always shown here first.
+
 **Standalone SketchUp Ruby extension | v0.2.0 beta | SS Digital Lab**
 
 A parametric BIM companion for [ArchiBIM](https://github.com/shukritobi/ArchiBIM), creating distinct panel-built assemblies rather than decorative single-mesh boxes.
