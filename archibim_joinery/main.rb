@@ -8,7 +8,7 @@ require_relative 'core'
 module SSDigitalLab
   module ArchiBIMJoinery
     extend self
-    VERSION = '0.2.0'
+    VERSION = '0.2.1'
     DICT = 'SSDigitalLab_ArchiBIM_Joinery'
     ARCH_DICT = 'SSDigitalLab_ArchiBIM'
     @dialog = nil
@@ -562,6 +562,14 @@ module SSDigitalLab
           export_schedule
         rescue StandardError => e
           UI.messagebox("Joinery schedule: #{e.message}")
+        end
+      end
+      @dialog.add_action_callback('resize_dimensions') do |_ctx,raw|
+        begin
+          resize_selected_dimensions(raw)
+        rescue StandardError => e
+          log('resize_button_error',error:e.message)
+          UI.messagebox("Joinery dimension resize: #{e.message}")
         end
       end
       @dialog.add_action_callback('scale_refresh') do |_ctx|
