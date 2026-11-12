@@ -307,7 +307,7 @@ module SSDigitalLab
         # identifies one existing cabinet; never guess from similar names.
         matches=originals.select do |source,data|
           source!=group && (source.definition==group.definition ||
-            (source.name==group.name && group.name.end_with?(" | #{'#{'}data['id'].to_s[0,8]}")))
+            (source.name==group.name && group.name.end_with?(" | #{data['id'].to_s[0,8]}")))
         end
         next unless matches.length==1
         bad << [group,JSON.parse(JSON.generate(matches.first[1]))]
