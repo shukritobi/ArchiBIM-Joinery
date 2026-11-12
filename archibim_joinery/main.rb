@@ -302,9 +302,15 @@ module SSDigitalLab
       model.entities.grep(Sketchup::Group).each do |group|
         next if data_for(group)
         next unless group.name.to_s.start_with?('ABJ | ')
-        src=originals.find { |source,_| source.definition==group.definition && source!=group }
-        next unless src
-        bad << [group,JSON.parse(JSON.generate(src[1]))]
+        # SketchUp Group.copy may create a distinct definition and omit
+        # instance attributes. Recover only when the exact generated name
+        # identifies one existing cabinet; never guess from similar names.
+        matches=originals.select do |source,data|
+          source!=group && (source.definition==group.definition ||
+            (source.name==group.name && group.name.end_with?(" | #{'#{'}data['id'].to_s[0,8]}")))
+        end
+        next unless matches.length==1
+        bad << [group,JSON.parse(JSON.generate(matches.first[1]))]
       end
       return 0 if bad.empty?
       model.start_operation('ArchiBIM Joinery: Repair copied cabinet IDs',true)
