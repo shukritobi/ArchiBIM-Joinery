@@ -50,6 +50,7 @@
   nearby straight-wall candidate detection.
 - Added `archibim_joinery/drafting.rb`: front elevation and plan segments, layered
   dashed-line DXF R12 generator, size annotations and mm coordinates.
+- Added native 2D elevation and plan SketchUp groups per cabinet on independently switchable tags for LayOut orthographic scenes. Existing tag visibility is preserved when regenerating a unit.
 - Added `archibim_joinery/runtime_ext.rb`: geometry bevel and opening-symbol groups;
   closest ArchiBIM wall binding on new placement; Refresh After Scale;
   single/batch cabinet DXFs; AI/MCP JSON export.
