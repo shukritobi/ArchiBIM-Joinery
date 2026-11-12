@@ -158,7 +158,18 @@ module SSDigitalLab
       end
       data['params'] = params
       group.name = "ABJ | #{params['name']} | #{data['id'].to_s[0,8]}"
-      group.layer = main_tag_for(model, data)
+      # Preserve existing tag assignment when scenes already exist. Switching
+      # a saved-scene cabinet to a new level tag can silently reveal it in LayOut.
+      previous_tag = group.layer
+      requested_tag = main_tag_for(model, data)
+      page_count = model.respond_to?(:pages) ? model.pages.length : 0
+      existing_joinery_tag = previous_tag && previous_tag.name.start_with?('ABJ | ')
+      if page_count > 0 && existing_joinery_tag && previous_tag != requested_tag
+        log('tag_migration_deferred_for_scenes', cabinet_id: data['id'],
+          existing: previous_tag.name, requested: requested_tag.name)
+      else
+        group.layer = requested_tag
+      end
       group.set_attribute(DICT, 'data', JSON.generate(data))
       group
     end
