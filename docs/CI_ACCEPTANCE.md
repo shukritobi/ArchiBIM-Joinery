@@ -12,6 +12,7 @@ CI must pass syntax checks, original 20 regression cases, new parametric and DXF
 - [ ] Door bar, knob and 45-degree edge handle geometry, offsets and material groups.
 - [ ] Fridge opening, ventilation requirements and upper-open/closed option; oven/microwave cavities.
 - [ ] Wall and tall box-up ceiling closure.
+- [ ] Enable native 2D elevation/plan tagged groups in orthographic LayOut model scenes, verify true-scale linework.
 - [ ] LayOut front projection displays dashed opening markers on dedicated tag.
 - [ ] AutoCAD imports exported DXF in millimetres and layers preserve opening line style.
 - [ ] JSON data export contains IDs, parameters, parts and 2D linework.
