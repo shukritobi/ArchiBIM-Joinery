@@ -58,8 +58,11 @@
 - New regression tests and CI for all test files.
 - Added roadmap and research/development logs.
 
+### Verification results (2026-11-12)
+- **GitHub Actions run 43128451807: SUCCESS** with Ruby syntax checks, 20 legacy tests (77 assertions), 8 enhancement tests (45 assertions), zero failures, and RBZ package upload.
+- Verified packaged archive `ArchiBIM_Joinery_v0.2.0.rbz` opens with ZIP integrity check and contains updated native plan/elevation groups.
+
 ### Still to validate
-- GitHub Actions CI run and installable RBZ artifact generated successfully.
 - Runtime testing in actual SketchUp 2026 desktop (this environment has no SketchUp GUI).
 - Exact behavior of tag dashed-line display in LayOut; DXF opening line style roundtrip.
 - Extending appliance families to manufacturer approved installation geometry,
