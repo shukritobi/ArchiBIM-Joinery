@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 # SketchUp-specific integration. Loaded after main.rb has registered the extension UI.
 require_relative 'drafting'
+require_relative 'scale_math'
 
 module SSDigitalLab
   module ArchiBIMJoinery
@@ -11,25 +12,60 @@ module SSDigitalLab
           raw=part_group.get_attribute(DICT,'part_data')
           next unless raw
           part=JSON.parse(raw)
-          next unless part['profile']=='edge_45'
-          w=part['w'].mm; d=part['d'].mm; h=part['h'].mm
-          bevel=[part['bevel_mm'].mm,d*0.8,w*0.25].min
-          polygon = if part['profile_side']=='left'
-                      [[0,bevel,0],[bevel,0,0],[w,0,0],[w,d,0],[0,d,0]]
-                    else
-                      [[0,0,0],[w-bevel,0,0],[w,bevel,0],[w,d,0],[0,d,0]]
-                    end
-          part_group.entities.clear!
-          face=part_group.entities.add_face(polygon)
-          raise "45 degree door profile failed: #{part['key']}" unless face
-          face.reverse! if face.normal.z<0
-          face.pushpull(h)
-          mat=material_for(group.model,part['material'])
-          part_group.entities.grep(Sketchup::Face).each { |f| f.material=mat; f.back_material=mat }
+          if part['profile']=='edge_45_top'
+            # A continuous horizontal grip, bevelled across the top of the front.
+            w=part['w'].mm; d=part['d'].mm; h=part['h'].mm
+            bevel=[part['bevel_mm'].mm,d*0.75,h*0.2].min
+            points=[[0,0,0],[0,d,0],[0,d,h],[0,bevel,h],[0,0,h-bevel]]
+            replace_profile(part_group,part,points,w,X_AXIS)
+          elsif part['shape']=='cylinder'
+            replace_round_handle(part_group,part)
+          end
         end
         add_elevation_symbols(group,data)
         add_2d_drawing_groups(group,data)
         group
+      end
+
+      def replace_profile(pg,part,points,distance,direction)
+        pg.entities.clear!
+        face=pg.entities.add_face(points)
+        raise "Unable to form profile #{part['key']}" unless face
+        face.reverse! if face.normal.dot(direction)<0
+        face.pushpull(distance)
+        mat=material_for(pg.model,part['material'])
+        pg.entities.grep(Sketchup::Face).each { |f| f.material=mat; f.back_material=mat }
+      end
+
+      # High-segment circular hardware: doors vertical, drawers horizontal.
+      def replace_round_handle(pg,part)
+        w=part['w'].mm; d=part['d'].mm; h=part['h'].mm
+        label=part['name']
+        axis=if label.include?('Post') || label.include?('Knob')
+               :y
+             elsif label.include?('Drawer Bar')
+               :x
+             else
+               :z
+             end
+        case axis
+        when :y
+          radius=[w,h].min*0.5
+          cx=w/2.0; cz=h/2.0
+          points=(0...40).map { |i| t=2*Math::PI*i/40; [cx+radius*Math.cos(t),0,cz+radius*Math.sin(t)] }
+          distance=d; direction=Y_AXIS
+        when :x
+          radius=[d,h].min*0.5
+          cy=d/2.0; cz=h/2.0
+          points=(0...32).map { |i| t=2*Math::PI*i/32; [0,cy+radius*Math.cos(t),cz+radius*Math.sin(t)] }
+          distance=w; direction=X_AXIS
+        else
+          radius=[w,d].min*0.5
+          cx=w/2.0; cy=d/2.0
+          points=(0...32).map { |i| t=2*Math::PI*i/32; [cx+radius*Math.cos(t),cy+radius*Math.sin(t),0] }
+          distance=h; direction=Z_AXIS
+        end
+        replace_profile(pg,part,points,distance,direction)
       end
 
       # Native per-cabinet linework that can be switched on in orthographic
@@ -123,47 +159,92 @@ module SSDigitalLab
         group
       end
 
+      def edit_selected(params)
+        group=selected_cabinet
+        if group
+          tr=group.transformation
+          factors=[tr.xaxis.length.to_f,tr.yaxis.length.to_f,tr.zaxis.length.to_f]
+          if ScaleMath.changed?(factors)
+            raise 'Native scaling is still applied to this cabinet. Use Refresh Native Scale or Resize to W / D / H before Update Selected.'
+          end
+        end
+        super(params)
+      end
+
+      # Read final root group transform and rebuild a cabinet without
+      # scaling panel material thickness. Call only after completing Scale.
       def refresh_scaled_selected
         group=selected_cabinet
-        raise 'Select a Joinery cabinet first' unless group
+        raise 'Select a generated Joinery cabinet (the outer group)' unless group
         tr=group.transformation
         axes=[tr.xaxis,tr.yaxis,tr.zaxis]
-        lengths=axes.map(&:length)
-        raise 'Cannot refresh zero, negative or degenerate scale' if lengths.any? { |s| !s.finite? || s<0.001 }
-        unit=axes.map(&:normalize)
+        lengths=axes.map { |axis| axis.length.to_f }
+        raise 'Invalid scale factor' unless lengths.all? { |factor| factor.finite? && factor>0.0001 }
+        unless ScaleMath.changed?(lengths)
+          msg='No group scaling detected. Finish the native Scale tool (click or Enter), select the OUTER cabinet group, then Refresh. Alternatively edit Width/Depth/Height at the top and press Resize.'
+          log('scale_no_transform',id:data_for(group)['id'],factors:lengths)
+          raise msg
+        end
+        unit=axes.map { |axis| axis.normalize }
         ortho=[unit[0].dot(unit[1]),unit[0].dot(unit[2]),unit[1].dot(unit[2])]
-        raise 'Shear transform is unsupported; use the native Scale tool without skewing' if ortho.any? { |d| d.abs>0.01 }
-        raise 'Mirrored transforms are unsupported' unless unit[0].cross(unit[1]).dot(unit[2])>0.99
+        raise 'Skew/shear unsupported; undo the skewed Scale operation' if ortho.any? { |d| d.abs>0.001 }
+        raise 'Mirrored transforms unsupported; undo negative scaling' unless unit[0].cross(unit[1]).dot(unit[2])>0.999
         data=data_for(group)
-        p=data['params'].dup
-        %w[width depth height].zip(lengths).each { |k,f| p[k] = (p[k].to_f*f).round(3) }
-        p=Core.normalize(p) # validates thickness and appliance clearances BEFORE clearing geometry
+        p=ScaleMath.apply_dimensions(data['params'],lengths)
+        frame=Geom::Transformation.axes(tr.origin,*unit)
+        commit_parametric_resize(group,data,p,frame,source:'native_scale',factors:lengths)
+      end
+
+      # Numeric fallback for Scale tool transforms unavailable at selection root.
+      def resize_selected_dimensions(raw)
+        group=selected_cabinet
+        raise 'Select a generated Joinery cabinet (outer group)' unless group
+        data=data_for(group)
+        values=raw.is_a?(String) ? JSON.parse(raw) : raw
+        keys=%w[width depth height]
+        new_dims=keys.to_h { |key| [key,values.fetch(key)] }
+        p=Core.normalize(data['params'].merge(new_dims))
+        tr=group.transformation
+        axes=[tr.xaxis,tr.yaxis,tr.zaxis]
+        normalized_axes=axes.map(&:normalize)
+        frame=Geom::Transformation.axes(tr.origin,*normalized_axes)
+        commit_parametric_resize(group,data,p,frame,source:'numeric_resize')
+      end
+
+      def commit_parametric_resize(group,data,p,frame,source:,factors:nil)
         model=group.model
-        model.start_operation('ArchiBIM Joinery: Refresh native Scale',true)
-        begin
-          frame=Geom::Transformation.axes(tr.origin,*unit)
-          if data['anchor']
-            found=find_wall(model,data['anchor']['wall_id'])
-            if found
-              data['anchor']['mode']='fixed' # user-scaled width wins over stretch mode
-              data['anchor']['mount_height']=p['mount_height']
-              p,wall_frame=Core.sync_binding(found[1],p,data['anchor'])
-              frame=to_transform(wall_frame)
-              data['anchor']['end_gap_mm']=wall_frame['wall_length']-data['anchor']['station_mm']-p['width']
-              data['anchor']['wall_signature']=wall_signature(found[1])
-            end
+        # Validate wall fit before committing a model mutation.
+        if data['anchor']
+          found=find_wall(model,data['anchor']['wall_id'])
+          if found
+            anchor=data['anchor'].dup
+            anchor['mode']='fixed'
+            anchor['mount_height']=p['mount_height']
+            p,wall_frame=Core.sync_binding(found[1],p,anchor)
+            frame=to_transform(wall_frame)
+            anchor['end_gap_mm']=wall_frame['wall_length']-anchor['station_mm']-p['width']
+            anchor['wall_signature']=wall_signature(found[1])
+            data['anchor']=anchor
           end
+        end
+        model.start_operation('ArchiBIM Joinery: Parametric resize',true)
+        begin
+          previous=data['params'].values_at('width','depth','height')
           data['params']=p
           group.transformation=frame
           build_geometry(group,data)
+          model.selection.clear
+          model.selection.add(group)
           model.commit_operation
-          log('scale_refreshed',cabinet_id:data['id'],scale:lengths,dimensions:p.values_at('width','depth','height'))
+          log('parametric_resize',id:data['id'],source:source,previous:previous,
+              new_dimensions:p.values_at('width','depth','height'),factors:factors)
           refresh
-        rescue StandardError
+          p
+        rescue StandardError=>e
           model.abort_operation
+          log('resize_error',id:data['id'],source:source,error:e.message)
           raise
         end
-        p
       end
 
       def export_selected_dxf
