@@ -28,7 +28,39 @@ module SSDigitalLab
           part_group.entities.grep(Sketchup::Face).each { |f| f.material=mat; f.back_material=mat }
         end
         add_elevation_symbols(group,data)
+        add_2d_drawing_groups(group,data)
         group
+      end
+
+      # Native per-cabinet linework that can be switched on in orthographic
+      # SketchUp scenes (and then displayed via those scenes in LayOut).
+      # Groups use the cabinet's local coordinate system so they follow its host.
+      def add_2d_drawing_groups(group,data)
+        p=Core.normalize(data['params'])
+        model=group.model
+        drawings=[
+          ['ABJ | 2D Elevation Linework','elevation',
+           Drafting.elevation_segments(p).reject { |v| v[4]=='ABJ_ELEVATION_OPENING' }],
+          ['ABJ | 2D Plan Linework','plan',Drafting.plan_segments(p)]
+        ]
+        box_top=p['box_up'] ? [p['height'],p['ceiling_height']-p['mount_height']].max : p['height']
+        drawings.each do |tag_name,kind,segments|
+          next if segments.empty?
+          layer=model.layers[tag_name] || model.layers.add(tag_name)
+          layer.visible=false if layer.visible? && !model.get_attribute(DICT,'show_2d_drawings',false)
+          drawing=group.entities.add_group
+          drawing.name="ABJ | 2D #{kind.capitalize} (Layout)"
+          drawing.layer=layer
+          drawing.set_attribute(DICT,'drawing_kind',kind)
+          segments.each do |x1,v1,x2,v2,_line_layer|
+            a,b=if kind=='plan'
+                  [[x1.mm,v1.mm,(box_top+2).mm],[x2.mm,v2.mm,(box_top+2).mm]]
+                else
+                  [[x1.mm,-3.mm,v1.mm],[x2.mm,-3.mm,v2.mm]]
+                end
+            drawing.entities.add_line(a,b)
+          end
+        end
       end
 
       def add_elevation_symbols(group,data)
