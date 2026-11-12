@@ -46,8 +46,11 @@ module SSDigitalLab
         box_top=p['box_up'] ? [p['height'],p['ceiling_height']-p['mount_height']].max : p['height']
         drawings.each do |tag_name,kind,segments|
           next if segments.empty?
-          layer=model.layers[tag_name] || model.layers.add(tag_name)
-          layer.visible=false if layer.visible? && !model.get_attribute(DICT,'show_2d_drawings',false)
+          layer=model.layers[tag_name]
+          unless layer
+            layer=model.layers.add(tag_name)
+            layer.visible=false unless model.get_attribute(DICT,'show_2d_drawings',false)
+          end
           drawing=group.entities.add_group
           drawing.name="ABJ | 2D #{kind.capitalize} (Layout)"
           drawing.layer=layer
@@ -68,14 +71,16 @@ module SSDigitalLab
         lines=Drafting.opening_segments(p)
         return if lines.empty?
         model=group.model
-        layer=model.layers['ABJ | 2D Elevation Openings'] || model.layers.add('ABJ | 2D Elevation Openings')
+        layer=model.layers['ABJ | 2D Elevation Openings']
+        new_layer=layer.nil?
+        layer ||= model.layers.add('ABJ | 2D Elevation Openings')
         if model.respond_to?(:line_styles)
           style=model.line_styles['Dash'] || model.line_styles['Short Dash']
           layer.line_style=style if style && layer.respond_to?(:line_style=)
         end
         # Disabled initially so symbolic lines do not obstruct perspective and render views.
         # Turn the tag ON in an orthographic front-elevation scene / LayOut viewport.
-        layer.visible=false if layer.visible? && !model.get_attribute(DICT,'show_elevation_openings',false)
+        layer.visible=false if new_layer && !model.get_attribute(DICT,'show_elevation_openings',false)
         symbols=group.entities.add_group
         symbols.name='ABJ | 2D Elevation Opening Symbols'
         symbols.layer=layer
