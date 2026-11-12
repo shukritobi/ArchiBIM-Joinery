@@ -22,12 +22,13 @@ module SSDigitalLab
       module Enhancements
         def presets(kind)
           p = super
-          p.merge('floor_finish_panels'=>true,'auto_doors'=>true,'max_door_width'=>600,
-                  'handle_style'=>'none','handle_offset'=>50,'handle_cc'=>128,
-                  'auto_wall_orient'=>true,'box_up'=>false,'ceiling_height'=>3000,
-                  'appliance_width'=>0,'appliance_height'=>0,'appliance_bottom'=>0,
-                  'appliance_side_clearance'=>4,'appliance_rear_clearance'=>50,
-                  'upper_storage'=>'none')
+          defaults = {'floor_finish_panels'=>true,'auto_doors'=>true,'max_door_width'=>600,
+                      'handle_style'=>'none','handle_offset'=>50,'handle_cc'=>128,
+                      'auto_wall_orient'=>true,'box_up'=>false,'ceiling_height'=>3000,
+                      'appliance_width'=>0,'appliance_height'=>0,'appliance_bottom'=>0,
+                      'appliance_side_clearance'=>4,'appliance_rear_clearance'=>50,
+                      'upper_storage'=>'none'}
+          defaults.merge(p) # family-specific appliance dimensions and upper storage win
         end
 
         def normalize(raw)
