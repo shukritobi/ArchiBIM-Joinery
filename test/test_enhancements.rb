@@ -39,7 +39,7 @@ class JoineryEnhancementsTest < Minitest::Test
     p=parts('base',handle_style:'bar')
     assert p.any? { |v| v['role']=='handle' }
     profile=parts('base',handle_style:'edge_45').find { |v| v['role']=='door' }
-    assert_equal 'edge_45',profile['profile']
+    assert_equal 'edge_45_top',profile['profile']
     assert profile['bevel_mm'] > 0
     assert_equal 0,parts('base',handle_style:'none').count { |v| v['role']=='handle' }
   end
