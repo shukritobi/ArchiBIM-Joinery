@@ -1,12 +1,12 @@
 # ArchiBIM Joinery
 
-**Standalone SketchUp Ruby extension | v0.1.0 beta | SS Digital Lab**
+**Standalone SketchUp Ruby extension | v0.2.0 beta | SS Digital Lab**
 
 A parametric BIM companion for [ArchiBIM](https://github.com/shukritobi/ArchiBIM), creating distinct panel-built assemblies rather than decorative single-mesh boxes.
 
 ## Available parametric families
 
-- Base cabinets, wall cabinets, tall pantry units
+- Base cabinets, wall cabinets, tall pantry units; refrigerator, oven and microwave tall housings
 - Desks / workstations, wardrobes, vanities
 - Bookcases, TV consoles, reception counters
 - Open bays, hinged doors, drawers, or drawer-and-door combinations
@@ -34,11 +34,11 @@ Core defaults: **16 mm carcass melamine**, 16 mm front, 6 mm back (independently
 ## Installation
 
 1. In SketchUp Desktop (tested target: 2026), choose **Extensions > Extension Manager > Install Extension**.
-2. Select `ArchiBIM_Joinery_v0.1.0.rbz`.
+2. Select `ArchiBIM_Joinery_v0.2.0.rbz`.
 3. Enable the extension and restart SketchUp if required.
 4. Open **Extensions > ArchiBIM Joinery > Joinery Manager**.
 
-The extension can load without ArchiBIM Core; wall hosting becomes available when the main ArchiBIM extension has generated its walls. No installation changes are required to the ArchiBIM source.
+The extension can load without ArchiBIM Core; wall hosting and automatic back-to-wall orientation become available when the main ArchiBIM extension has generated its walls. No installation changes are required to the ArchiBIM source.
 
 ## Quick start
 
@@ -59,8 +59,22 @@ The extension can load without ArchiBIM Core; wall hosting becomes available whe
 - **Known beta limitation:** Sync uses its own undoable operation, so an ArchiBIM wall change and dependent cabinet rebuild are not yet a *single atomic undo step*. The planned versioned ArchiBIM event API will support a coordinated operation.
 - In this beta, binding is supported for **root-level straight ArchiBIM walls**. Joinery cannot yet solve corner cabinets, two-wall-fit units, angled wall returns or arbitrary nested linked components.
 - The plugin does **not** automatically avoid ArchiBIM windows, doors, sockets or other collisions yet.
-- Native freehand Scale on cabinetry is unsupported: edit parametric dimensions instead.
+- Native Scale now has an explicit **Refresh After Native Scale** command. It absorbs orthogonal X/Y/Z scale factors into cabinet dimensions, restores unit scale and regenerates fixed-thickness parts. Shearing or mirroring is rejected; wall-hosted refresh retains its station and uses fixed-width mode.
 - Auto-sync is in-memory and enabled by default when the plugin loads; it can be toggled in the manager. Use a copy of important models while testing.
+
+## v0.2.0 features and workflow
+
+- **Finished panels to the floor:** fillers and visible end panels extend to the cabinet's base datum by default (`floor_finish_panels` toggle). The toe kick remains recessed.
+- **Nearest ArchiBIM wall:** the back automatically aligns when placing within 350 mm of a recognized straight root-level ArchiBIM wall. Automatic orientation can be disabled; manual Bind remains.
+- **Door splitting:** doors automatically distribute into equal leaves with no leaf wider than 600 mm (editable project default); configuration must remain within 12 leaves per assembly.
+- **Hardware:** none, conceptual bar pull, knob or genuine 45-degree meeting-edge chamfer (door-only). Bar location defaults to 50 mm from door opening edge, vertically centered, and 128 mm nominal screw centres. Confirm actual handle supplier dimensions.
+- **Kitchen appliance tall units:** fridge, oven and microwave; set nominal aperture size, opening level, side and rear clearance, plus open or closed upper storage. The back of the equipment niche is left open. These are modelling presets, **not manufacturer-approved installation dimensions**.
+- **Ceiling box-up:** toggle box-up on wall, tall and appliance tall units; ceiling height uses the same floor datum as mounting height.
+- **2D symbols:** independent `ABJ | 2D Elevation Openings` tag with dashed elevation swing indicators (tag hidden by default to keep 3D views clean).
+- **DXF drawings:** export front elevation + plan for selected cabinet or batch one DXF per cabinet from **Scale & 2D Documentation**. Separate layers, mm coordinates, dashed opening swing segments. Import into CAD, or include the tagged SketchUp model in LayOut.
+- **AI/MCP exchange:** export read-only JSON containing each cabinet's UUID, parameter dictionary, host ID, parts and 2D line segments. No live MCP service yet.
+
+See [development roadmap](docs/ROADMAP.md) and [research/development log](docs/DEVELOPMENT_LOG.md) for design decisions and validation status.
 
 ## Manufacturing limitation
 
@@ -68,7 +82,7 @@ The cutlist is **preliminary only**. It is generated from real rectangular part 
 
 ## Validation
 
-Pure-Ruby core: **20 tests / 77 assertions**, all passing at first packaging. Run `ruby test/test_core.rb`. Check syntax with `ruby -c archibim_joinery/main.rb`. Build a SketchUp extension archive by running `ruby build.rb` from the repo root. GitHub Actions runs the same checks, and creates an RBZ artifact.
+Pure-Ruby core: **20 tests / 77 assertions** at the v0.1 baseline. v0.2 adds an independent regression suite run by CI. Run `ruby test/test_core.rb` and `ruby test/test_enhancements.rb`. Check syntax with `ruby -c archibim_joinery/main.rb` and `ruby -c archibim_joinery/runtime_ext.rb`. Build a SketchUp extension archive by running `ruby build.rb` from the repo root. GitHub Actions runs the same checks, and creates an RBZ artifact.
 
 This prototype was **not executed inside the SketchUp desktop runtime** in the packaging environment. In-app geometry generation, GUI callbacks and hosted wall transforms must be validated in SketchUp before production use.
 
