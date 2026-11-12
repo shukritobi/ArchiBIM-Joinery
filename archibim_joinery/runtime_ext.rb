@@ -87,6 +87,7 @@ module SSDigitalLab
             layer=model.layers.add(tag_name)
             layer.visible=false unless model.get_attribute(DICT,'show_2d_drawings',false)
           end
+          organize_joinery_tag(model, layer)
           drawing=group.entities.add_group
           drawing.name="ABJ | 2D #{kind.capitalize} (Layout)"
           drawing.layer=layer
@@ -110,6 +111,7 @@ module SSDigitalLab
         layer=model.layers['ABJ | 2D Elevation Openings']
         new_layer=layer.nil?
         layer ||= model.layers.add('ABJ | 2D Elevation Openings')
+        organize_joinery_tag(model, layer)
         if model.respond_to?(:line_styles)
           style=model.line_styles['Dash'] || model.line_styles['Short Dash']
           layer.line_style=style if style && layer.respond_to?(:line_style=)
@@ -163,7 +165,7 @@ module SSDigitalLab
         group=selected_cabinet
         if group
           tr=group.transformation
-          factors=[tr.xaxis.length.to_f,tr.yaxis.length.to_f,tr.zaxis.length.to_f]
+          factors, = ScaleMath.decompose(tr)
           if ScaleMath.changed?(factors)
             raise 'Native scaling is still applied to this cabinet. Use Refresh Native Scale or Resize to W / D / H before Update Selected.'
           end
@@ -173,26 +175,20 @@ module SSDigitalLab
 
       # Read final root group transform and rebuild a cabinet without
       # scaling panel material thickness. Call only after completing Scale.
-      def refresh_scaled_selected
+      def refresh_scaled_selected(transparent: false)
         group=selected_cabinet
         raise 'Select a generated Joinery cabinet (the outer group)' unless group
         tr=group.transformation
-        axes=[tr.xaxis,tr.yaxis,tr.zaxis]
-        lengths=axes.map { |axis| axis.length.to_f }
-        raise 'Invalid scale factor' unless lengths.all? { |factor| factor.finite? && factor>0.0001 }
+        lengths, unit = ScaleMath.decompose(tr)
         unless ScaleMath.changed?(lengths)
           msg='No group scaling detected. Finish the native Scale tool (click or Enter), select the OUTER cabinet group, then Refresh. Alternatively edit Width/Depth/Height at the top and press Resize.'
           log('scale_no_transform',id:data_for(group)['id'],factors:lengths)
           raise msg
         end
-        unit=axes.map { |axis| axis.normalize }
-        ortho=[unit[0].dot(unit[1]),unit[0].dot(unit[2]),unit[1].dot(unit[2])]
-        raise 'Skew/shear unsupported; undo the skewed Scale operation' if ortho.any? { |d| d.abs>0.001 }
-        raise 'Mirrored transforms unsupported; undo negative scaling' unless unit[0].cross(unit[1]).dot(unit[2])>0.999
         data=data_for(group)
         p=ScaleMath.apply_dimensions(data['params'],lengths)
         frame=Geom::Transformation.axes(tr.origin,*unit)
-        commit_parametric_resize(group,data,p,frame,source:'native_scale',factors:lengths)
+        commit_parametric_resize(group,data,p,frame,source:'native_scale',factors:lengths,transparent:transparent)
       end
 
       # Numeric fallback for Scale tool transforms unavailable at selection root.
@@ -205,13 +201,12 @@ module SSDigitalLab
         new_dims=keys.to_h { |key| [key,values.fetch(key)] }
         p=Core.normalize(data['params'].merge(new_dims))
         tr=group.transformation
-        axes=[tr.xaxis,tr.yaxis,tr.zaxis]
-        normalized_axes=axes.map(&:normalize)
+        _lengths, normalized_axes=ScaleMath.decompose(tr)
         frame=Geom::Transformation.axes(tr.origin,*normalized_axes)
         commit_parametric_resize(group,data,p,frame,source:'numeric_resize')
       end
 
-      def commit_parametric_resize(group,data,p,frame,source:,factors:nil)
+      def commit_parametric_resize(group,data,p,frame,source:,factors:nil,transparent:false)
         model=group.model
         # Validate wall fit before committing a model mutation.
         if data['anchor']
@@ -227,7 +222,7 @@ module SSDigitalLab
             data['anchor']=anchor
           end
         end
-        model.start_operation('ArchiBIM Joinery: Parametric resize',true)
+        model.start_operation('ArchiBIM Joinery: Parametric resize',true,false,transparent)
         begin
           previous=data['params'].values_at('width','depth','height')
           data['params']=p
@@ -293,7 +288,39 @@ module SSDigitalLab
       end
     end
 
+    # Automatic reconstruction after the native Scale tool completes.
+    # The parametric rebuild uses a transparent operation for Undo grouping.
+    class NativeScaleWatcher < Sketchup::ToolsObserver
+      SCALE_TOOL_ID = 21236
+      def onToolStateChanged(tools, _tool_name, tool_id, state)
+        return unless tool_id == SCALE_TOOL_ID && state == 0
+        joinery = SSDigitalLab::ArchiBIMJoinery
+        selected = joinery.selected_cabinet
+        return unless selected
+        factors, = joinery::ScaleMath.decompose(selected.transformation)
+        return unless joinery::ScaleMath.changed?(factors)
+        joinery.refresh_scaled_selected(transparent: true)
+      rescue StandardError => e
+        SSDigitalLab::ArchiBIMJoinery.log('native_scale_auto_error', error: e.message,
+          backtrace: e.backtrace&.first(8))
+      end
+    end
+
+    module NativeScaleObserverInstall
+      def watch(model)
+        super
+        @native_scale_watchers ||= {}
+        key=model.object_id
+        return if @native_scale_watchers.key?(key)
+        observer=NativeScaleWatcher.new
+        model.tools.add_observer(observer)
+        @native_scale_watchers[key]=observer
+      end
+    end
+
     singleton_class.prepend(RuntimeExtensions)
+    singleton_class.prepend(NativeScaleObserverInstall)
+    watch(Sketchup.active_model)
     require 'time'
     # Add menu commands independent of the existing HtmlDialog callbacks.
     unless defined?(@extra_menus_registered) && @extra_menus_registered
