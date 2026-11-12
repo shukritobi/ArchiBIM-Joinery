@@ -102,9 +102,37 @@ module SSDigitalLab
       material
     end
 
+    # Preserve existing tag names, visibility and saved LayOut scenes.
+    def organize_joinery_tag(model, layer)
+      root = layer.name.include?('2D') ? 'ArchiBIM | 2D Graphics' : 'ArchiBIM | Joinery'
+      folder = model.layers.folders.find { |folder| folder.name == root } || model.layers.add_folder(root)
+      layer.folder = folder if layer.folder.nil?
+      layer
+    end
+
     def tag_for(model, role)
       name = "ABJ | #{role.to_s.split('_').map(&:capitalize).join(' ')}"
-      model.layers[name] || model.layers.add(name)
+      layer = model.layers[name] || model.layers.add(name)
+      organize_joinery_tag(model, layer)
+    end
+
+    def main_tag_for(model, data)
+      anchor = data['anchor']
+      return tag_for(model, 'joinery') unless anchor && anchor['wall_id']
+      host = model.entities.grep(Sketchup::Group).find do |item|
+        raw = item.get_attribute(ARCH_DICT, 'data')
+        next false unless raw
+        begin
+          JSON.parse(raw)['id'] == anchor['wall_id']
+        rescue JSON::ParserError
+          false
+        end
+      end
+      return tag_for(model, 'joinery') unless host
+      name = host.layer.name.to_s.split(' | ').last
+      return tag_for(model, 'joinery') if name.empty?
+      layer = model.layers["ABJ | Joinery | #{name}"] || model.layers.add("ABJ | Joinery | #{name}")
+      organize_joinery_tag(model, layer)
     end
 
     def build_geometry(group, data)
@@ -130,7 +158,18 @@ module SSDigitalLab
       end
       data['params'] = params
       group.name = "ABJ | #{params['name']} | #{data['id'].to_s[0,8]}"
-      group.layer = tag_for(model, 'joinery')
+      # Preserve existing tag assignment when scenes already exist. Switching
+      # a saved-scene cabinet to a new level tag can silently reveal it in LayOut.
+      previous_tag = group.layer
+      requested_tag = main_tag_for(model, data)
+      page_count = model.respond_to?(:pages) ? model.pages.length : 0
+      existing_joinery_tag = previous_tag && previous_tag.name.start_with?('ABJ | ')
+      if page_count > 0 && existing_joinery_tag && previous_tag != requested_tag
+        log('tag_migration_deferred_for_scenes', cabinet_id: data['id'],
+          existing: previous_tag.name, requested: requested_tag.name)
+      else
+        group.layer = requested_tag
+      end
       group.set_attribute(DICT, 'data', JSON.generate(data))
       group
     end
