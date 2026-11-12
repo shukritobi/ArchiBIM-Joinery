@@ -306,7 +306,15 @@ module SSDigitalLab
 
       def refresh_after_scale
         joinery = SSDigitalLab::ArchiBIMJoinery
-        selected = joinery.selected_cabinet
+        # Selection-changing rebuild is only safe for exactly one cabinet.
+        # Never discard other selected objects during native multi-Scale.
+        selected_cabinets = Sketchup.active_model.selection.to_a.select { |e| joinery.data_for(e) }
+        if selected_cabinets.length != 1
+          joinery.log('native_scale_multi_selection_skipped',
+            selected_cabinets: selected_cabinets.length) if selected_cabinets.length > 1
+          return
+        end
+        selected = selected_cabinets.first
         return unless selected && selected.valid?
         factors, = joinery::ScaleMath.decompose(selected.transformation)
         return unless joinery::ScaleMath.changed?(factors)
