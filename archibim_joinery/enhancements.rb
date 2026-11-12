@@ -180,9 +180,16 @@ module SSDigitalLab
                 length=[p['handle_cc']+24,door['h']-20].min
                 add_part(result,"handle-#{door['key']}","Bar Handle #{door['name']}",x-6,-28,z-length/2,
                          12,12,length,'handle',p,{'material'=>'Brushed Steel'})
+                cc=[p['handle_cc']/2.0,length/2-8].min
+                [-cc,cc].each_with_index do |offset,j|
+                  add_part(result,"standoff-#{door['key']}-#{j+1}","Handle Post",x-4,-16,z+offset-4,
+                           8,16,8,'handle',p,{'material'=>'Brushed Steel'})
+                end
               else
                 add_part(result,"handle-#{door['key']}","Knob #{door['name']}",x-12,-26,z-12,
                          24,22,24,'handle',p,{'material'=>'Brushed Steel'})
+                add_part(result,"standoff-#{door['key']}","Knob Post",x-5,-4,z-5,
+                         10,4,10,'handle',p,{'material'=>'Brushed Steel'})
               end
             end
           end
@@ -191,8 +198,18 @@ module SSDigitalLab
               length=[p['handle_cc']+24,dr['w']-20].min
               add_part(result,"handle-#{dr['key']}","Drawer Bar #{dr['name']}",dr['x']+dr['w']/2-length/2,-28,
                        dr['z']+dr['h']/2-6,length,12,12,'handle',p,{'material'=>'Brushed Steel'})
+              cc=[p['handle_cc']/2.0,length/2-8].min
+              [-cc,cc].each_with_index do |offset,j|
+                add_part(result,"standoff-#{dr['key']}-#{j+1}","Drawer Pull Post",
+                         dr['x']+dr['w']/2+offset-4,-16,dr['z']+dr['h']/2-4,
+                         8,16,8,'handle',p,{'material'=>'Brushed Steel'})
+              end
             end
           end
+        end
+
+        def cutlist(raw)
+          super.reject { |item| item['role']=='handle' } # hardware should use its own fittings schedule
         end
 
         def find_near_wall(walls,point,p,max_distance=350.0)
