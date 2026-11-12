@@ -26,6 +26,12 @@ jobs:
           for testfile in test/test_*.rb; do ruby "$testfile" || exit 1; done
       - name: Build SketchUp RBZ
         run: ruby build.rb
+      - name: Copy build to permanent latest filename
+        run: |
+          set -euo pipefail
+          rbz="$(find dist -maxdepth 1 -type f -name 'ArchiBIM_Joinery_v*.rbz' -print -quit)"
+          test -n "$rbz" && test -s "$rbz"
+          cp "$rbz" dist/ArchiBIM_Joinery_latest.rbz
       - uses: actions/upload-artifact@v4
         with:
           name: ArchiBIM-Joinery-rbz
@@ -38,18 +44,18 @@ jobs:
           set -euo pipefail
           version="$(sed -n "s/.*extension\.version = '\([^']*\)'.*/\1/p" ArchiBIM_Joinery.rb | head -n 1)"
           test -n "$version" || { echo "Missing extension version"; exit 1; }
-          rbz="$(find dist -maxdepth 1 -type f -name '*.rbz' -print -quit)"
-          test -n "$rbz" || { echo "Missing RBZ"; exit 1; }
+          rbz="dist/ArchiBIM_Joinery_v${version}.rbz"
+          asset="dist/ArchiBIM_Joinery_latest.rbz"
+          test -s "$rbz" && test -s "$asset" || { echo "Missing RBZ"; exit 1; }
           tag="v${version}"
-          asset="${rbz}#ArchiBIM_Joinery_latest.rbz"
           notes="docs/RELEASE_NOTES_v${version}.md"
 
           if gh release view "$tag" >/dev/null 2>&1; then
-            gh release upload "$tag" "$asset" --clobber
+            gh release upload "$tag" "$rbz" "$asset" --clobber
             gh release edit "$tag" --latest
           else
             if [ -f "$notes" ]; then
-              gh release create "$tag" "$asset" --target "$GITHUB_SHA" \
+              gh release create "$tag" "$rbz" "$asset" --target "$GITHUB_SHA" \
                 --title "ArchiBIM Joinery v${version} (beta)" --notes-file "$notes" --latest
             else
               gh release create "$tag" "$asset" --target "$GITHUB_SHA" \
