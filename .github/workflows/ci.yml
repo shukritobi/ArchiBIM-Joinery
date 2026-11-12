@@ -58,7 +58,7 @@ jobs:
               gh release create "$tag" "$rbz" "$asset" --target "$GITHUB_SHA" \
                 --title "ArchiBIM Joinery v${version} (beta)" --notes-file "$notes" --latest
             else
-              gh release create "$tag" "$asset" --target "$GITHUB_SHA" \
+              gh release create "$tag" "$rbz" "$asset" --target "$GITHUB_SHA" \
                 --title "ArchiBIM Joinery v${version} (beta)" \
                 --notes "Automated RBZ build from validated main branch. Test in SketchUp before production use." --latest
             fi
