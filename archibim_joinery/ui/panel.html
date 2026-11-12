@@ -20,11 +20,24 @@ input:focus,select:focus{outline:1px solid #31b6aa}.check{flex-direction:row;ali
 .info{font-size:11px;color:#afc6d1;line-height:1.5}
 .range-row{display:flex;align-items:center;gap:8px}.range-row input{flex:1;padding:0}.range-row output{min-width:45px;text-align:right}
 .badge{font-size:10px;color:#9de1db;background:#1a4f4d;padding:4px 7px;border-radius:4px;white-space:nowrap}#selected-id{word-break:break-all}
+
+@media (max-width:520px){
+  header{padding:12px}main{padding:10px 10px 28px}
+  section{padding:10px;margin-bottom:9px}.topline{flex-wrap:wrap;gap:7px}
+  .grid{grid-template-columns:minmax(0,1fr)}.span2{grid-column:auto}
+  .command-dock{top:0}
+  .command-dock .buttons{display:flex;flex-wrap:nowrap;overflow-x:auto;padding:0 0 7px;scrollbar-width:thin}
+  .command-dock .buttons button{flex:0 0 auto;white-space:nowrap}
+  section:not(.command-dock) .buttons button{flex:1 1 145px}
+  .range-row input{min-width:0}
+}
+@media (max-width:340px){.buttons{gap:5px}section:not(.command-dock) .buttons button{flex-basis:100%}}
 </style></head><body>
 <header><div class="topline"><h1>ArchiBIM <span style="color:#5bd2c9">Joinery</span></h1><span class="badge">BETA 0.2.1</span></div><small>Parametric Cabinets · Desks · Built-ins</small></header>
 <main>
 <section class="command-dock"><h2>Cabinet Actions</h2>
 <div class="buttons"><button class="primary" onclick="place()">+ Place New</button><button class="primary" onclick="edit()">Update Selected</button><button onclick="resize()">Resize to W / D / H</button><button onclick="window.sketchup.scale_refresh()">Refresh Native Scale</button><button onclick="window.sketchup.ready()">Load Selected</button></div>
+<p id="action-feedback" class="info" role="status" aria-live="polite" aria-atomic="true">Ready for cabinet actions.</p>
 <p class="info">To use native Scale: finish the Scale action in SketchUp, select the outer cabinet group, then press Refresh. For reliable resizing without native Scale, edit the dimensions below and press Resize.</p>
 <label class="check"><input id="show_all_options" type="checkbox" onchange="syncApplicability()">Allow advanced / normally irrelevant controls</label></section>
 <section><h2>Cabinet Library</h2><div class="grid">
@@ -98,7 +111,7 @@ input:focus,select:focus{outline:1px solid #31b6aa}.check{flex-direction:row;ali
 <label class="check" style="margin-top:13px"><input id="auto" type="checkbox" checked onchange="window.sketchup.auto_sync(this.checked)">Auto-sync after model edits</label>
 <p class="tip">To bind: Ctrl-select one generated cabinet AND one ArchiBIM wall in SketchUp, choose exposed face, then Bind. The cabinet snaps its back to the wall's physical face. Auto-sync executes after a completed SketchUp operation, not during dragging.</p>
 </section>
-<section><h2>Quantities & Diagnostics</h2><div id="status" class="status">Open a model or select a cabinet.</div>
+<section><h2>Quantities & Diagnostics</h2><div id="status" class="status" role="status" aria-live="polite" aria-atomic="true">Open a model or select a cabinet.</div>
 <div class="buttons"><button onclick="window.sketchup.export()">Export Preliminary Cutlist CSV</button><button onclick="window.sketchup.schedule()">Export BIM Cabinet Schedule CSV</button></div>
 <p class="tip">Runner installation clearances and manufacturing dimensions are provisional; verify manufacturer-specific technical sheets. Confirm specified hardware, joinery, grain direction, edge banding and panel machining before sending to fabrication.</p></section>
 </main>
@@ -137,9 +150,10 @@ function syncApplicability(){
   ['filler_left','filler_right','end_panel_left','end_panel_right','door_gap','front','back','material'].forEach(k=>applicability(k,true));
 }
 function bind(){window.sketchup.bind(el('side').value,el('mode').value)}
-window.joineryPreset=function(p){fill(p);didLoadSelection=false};
+window.joineryPreset=function(p){fill(p);didLoadSelection=false;el('action-feedback').textContent='Cabinet preset loaded. Review dimensions before placement.';};
 window.joineryRefresh=function(payload){
  el('auto').checked=!!payload.auto_sync;
+ el('action-feedback').textContent='Cabinet selection and quantities refreshed from SketchUp.';
  const d=payload.selected;
  if(d){
    fill(d.params);didLoadSelection=true;
@@ -152,6 +166,10 @@ function safe(v){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;'
 el('kind').addEventListener('change',()=>window.sketchup.preset(el('kind').value));
 ['front','handle_style','runner_type','top_skirting','top_thickness','toe_height'].forEach(k=>el(k).addEventListener('change',syncApplicability));
 el('top_skirting_height').addEventListener('input',updateSkirtingLabel);
+document.addEventListener('click',event=>{
+  const command=event.target.closest('button[onclick]');
+  if(command)el('action-feedback').textContent='Sending '+command.textContent.trim()+' to SketchUp…';
+},true);
 window.sketchup.preset('base');
 window.sketchup.ready();
 </script></body></html>
