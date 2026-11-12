@@ -14,7 +14,8 @@ jobs:
         run: |
           find . -type f -name '*.rb' -print0 | xargs -0 -n1 ruby -c
       - name: Parameter engine tests
-        run: ruby test/test_core.rb
+        run: |
+          for testfile in test/test_*.rb; do ruby "$testfile" || exit 1; done
       - name: Build SketchUp RBZ
         run: ruby build.rb
       - uses: actions/upload-artifact@v4
