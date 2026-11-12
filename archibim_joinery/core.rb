@@ -198,16 +198,30 @@ module SSDigitalLab
       end
 
       def self.drawers(append, p, x0, cw, z, height, t, gap, index_offset)
-        n = p['drawer_count']; front_each = (height - gap*(n-1))/n.to_f
+        n = p['drawer_count']
+        # Keep each reveal the same, including the top grip/shadow gap.
+        shadow_gap = p.fetch('drawer_shadow_gap', gap).to_f
+        front_each = (height - n*shadow_gap)/n.to_f
+        raise ArgumentError, 'Drawer shadow gaps exceed available height' if front_each < 65
         panel = p['panel_thickness']
         available = cw-2*panel
-        # 13 mm clearance per side is a configurable placeholder, NOT hardware-certified sizing.
-        clearance = 13.0
+        runner = p.fetch('runner_type', 'generic')
+        clearance = if %w[blum_movento hettich_quadro].include?(runner)
+                      # Indicative 16 mm wooden drawer-box deduction based on 21 mm
+                      # inside width rule; verify exact runner and mounting variant.
+                      21.0-panel
+                    else
+                      p.fetch('runner_clearance', 13.0).to_f
+                    end
+        raise ArgumentError, 'Invalid runner side clearance for panel thickness' if clearance < 1
         box_w = available - 2*clearance
-        box_d = [p['depth']-t-45.0, 120.0].max
+        max_depth = [p['depth'] - t - 45.0, 120.0].max
+        length = p.fetch('runner_length', 450).to_f
+        box_d = %w[generic none].include?(runner) ? max_depth : [max_depth,length - 10.0].min
+        raise ArgumentError, 'Selected runner is too long for cabinet depth' if runner != 'none' && runner != 'generic' && length > max_depth + 20
         n.times do |i|
           idx = i+index_offset+1
-          zz = z+i*(front_each+gap)
+          zz = z+i*(front_each+shadow_gap)
           append.call("drawer-front-#{idx}", "Drawer Front #{idx}", x0+gap, 0, zz,
                       cw-2*gap, t, front_each, 'drawer_front')
           box_z = zz + [front_each*0.15, 20.0].max
@@ -223,6 +237,16 @@ module SSDigitalLab
             append.call("drawer-bottom-#{idx}", "Drawer #{idx} Bottom", bx+panel, t+15+panel,
                         box_z, box_w-2*panel, box_d-2*panel, [p['back_thickness'], 6].max,
                         'drawer_bottom')
+            if runner != 'none' && runner != 'generic'
+              # Two simplified rail bodies for coordination / 2D detailing. These
+              # are NOT a manufacturer's manufacturing or drilling template.
+              rail_d = [length, max_depth].min
+              rail_z = box_z + 4
+              append.call("runner-left-#{idx}", "Left Drawer Runner #{idx}", x0+panel, t+17,
+                          rail_z, [clearance, 6].min, rail_d, 8, 'drawer_runner')
+              append.call("runner-right-#{idx}", "Right Drawer Runner #{idx}", x0+cw-panel-[clearance,6].min, t+17,
+                          rail_z, [clearance, 6].min, rail_d, 8, 'drawer_runner')
+            end
           end
         end
       end
