@@ -4,6 +4,7 @@ require 'json'
 require 'csv'
 require 'securerandom'
 require_relative 'core'
+require_relative 'copy_recovery'
 
 module SSDigitalLab
   module ArchiBIMJoinery
@@ -261,7 +262,8 @@ module SSDigitalLab
     def repair_duplicate_ids(model)
       seen={}
       bad=[]
-      all_cabinets(model).each do |group,data|
+      originals=all_cabinets(model)
+      originals.each do |group,data|
         uuid=data['id'].to_s
         if uuid.empty? || seen.key?(uuid)
           bad << [group,data]
@@ -269,10 +271,31 @@ module SSDigitalLab
           seen[uuid]=true
         end
       end
+      # SketchUp Group.copy may return a bare unnamed Layer0 group without
+      # copying the parent attribute dictionary. The child cabinet parts
+      # normally still retain their UUID-bearing part_key, or their exact
+      # local geometry when all nested dictionaries were also omitted.
+      model.entities.grep(Sketchup::Group).each do |group|
+        next if data_for(group)
+        candidate=CopyRecovery.match_source(group,originals,DICT)
+        unless candidate
+          next unless group.name.to_s.start_with?('ABJ | ')
+          # Keep backward compatibility with named group copies, but only
+          # when a single verified source definition/name matches.
+          matches=originals.select do |source,data|
+            source!=group && (source.definition==group.definition ||
+              (source.name==group.name && group.name.end_with?(" | #{data['id'].to_s[0,8]}")))
+          end
+          candidate=matches.first if matches.length==1
+        end
+        next unless candidate
+        bad << [group,JSON.parse(JSON.generate(candidate[1]))]
+      end
       return 0 if bad.empty?
       model.start_operation('ArchiBIM Joinery: Repair copied cabinet IDs',true)
       begin
         bad.each do |group,data|
+          group.make_unique # copied groups must not modify shared geometry
           data['id']=SecureRandom.uuid
           build_geometry(group,data)
         end
