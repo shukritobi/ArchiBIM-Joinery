@@ -8,7 +8,7 @@ require_relative 'core'
 module SSDigitalLab
   module ArchiBIMJoinery
     extend self
-    VERSION = '0.1.0'
+    VERSION = '0.2.0'
     DICT = 'SSDigitalLab_ArchiBIM_Joinery'
     ARCH_DICT = 'SSDigitalLab_ArchiBIM'
     @dialog = nil
@@ -564,6 +564,34 @@ module SSDigitalLab
           UI.messagebox("Joinery schedule: #{e.message}")
         end
       end
+      @dialog.add_action_callback('scale_refresh') do |_ctx|
+        begin
+          refresh_scaled_selected
+        rescue StandardError => e
+          UI.messagebox("Joinery scale refresh: #{e.message}")
+        end
+      end
+      @dialog.add_action_callback('dxf') do |_ctx|
+        begin
+          export_selected_dxf
+        rescue StandardError => e
+          UI.messagebox("Joinery 2D export: #{e.message}")
+        end
+      end
+      @dialog.add_action_callback('dxf_all') do |_ctx|
+        begin
+          export_all_dxf
+        rescue StandardError => e
+          UI.messagebox("Joinery batch export: #{e.message}")
+        end
+      end
+      @dialog.add_action_callback('mcp_json') do |_ctx|
+        begin
+          export_ai_json
+        rescue StandardError => e
+          UI.messagebox("Joinery JSON export: #{e.message}")
+        end
+      end
       @dialog.add_action_callback('auto_sync') do |_ctx,flag|
         @auto_sync = flag == true || flag.to_s == 'true'
         log('auto_sync_setting',enabled:@auto_sync)
@@ -593,3 +621,6 @@ module SSDigitalLab
     log('loaded',version:VERSION)
   end
 end
+
+# v0.2 features are loaded after base registration; these prepend without changing v0.1 data.
+require_relative 'runtime_ext'
