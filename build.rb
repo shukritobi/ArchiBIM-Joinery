@@ -4,7 +4,10 @@ require 'tmpdir'
 require 'zlib'
 # ZIP packaging through system zip to avoid adding runtime dependencies to the extension.
 ROOT=File.expand_path(__dir__)
-OUT=File.join(ROOT,'dist','ArchiBIM_Joinery_v0.2.0.rbz')
+source=File.read(File.join(ROOT,'ArchiBIM_Joinery.rb'))
+version=source[/extension\.version\s*=\s*['"]([^'"]+)['"]/,1]
+abort 'Cannot identify extension.version' unless version && version.match?(/\A\d+\.\d+\.\d+\z/)
+OUT=File.join(ROOT,'dist',"ArchiBIM_Joinery_v#{version}.rbz")
 FileUtils.mkdir_p(File.dirname(OUT))
 Dir.chdir(ROOT) do
   abort 'zip executable not found' unless system('which zip > /dev/null 2>&1')
