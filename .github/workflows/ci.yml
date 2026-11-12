@@ -24,6 +24,10 @@ jobs:
       - name: Parameter engine tests
         run: |
           for testfile in test/test_*.rb; do ruby "$testfile" || exit 1; done
+      - name: Validate HtmlDialog JavaScript syntax
+        run: |
+          sed -n '/<script>/,/<\\/script>/p' archibim_joinery/ui/panel.html | sed '1d;\$d' > /tmp/joinery-ui.js
+          node --check /tmp/joinery-ui.js
       - name: Build SketchUp RBZ
         run: ruby build.rb
       - name: Copy build to permanent latest filename
