@@ -47,6 +47,7 @@ class JoineryLayoutV03Test < Minitest::Test
     right=C.parts(preset('corner_base',corner_ownership:'right'))
     assert left.any? { |r| r['key']=='corner-door-front' }
     assert right.any? { |r| r['key']=='corner-door-side' }
+    refute right.any? { |r| r['key']=='corner-side-right' },'side-access door must not overlap a solid side panel'
     assert_equal 50,left.find { |r| r['key']=='corner-filler-front' }['w']
   end
 
@@ -57,7 +58,10 @@ class JoineryLayoutV03Test < Minitest::Test
     assert_equal 'none',p['handle_style']
     a=C.parts(p)
     assert_equal 2,a.count { |r| r['role']=='finish' }
+    assert_equal 20,a.find { |r| r['key']=='end-left' }['w']
+    assert_equal 20,a.find { |r| r['key']=='end-right' }['w']
     left=a.find { |r| r['key']=='side-left' }
+    assert_equal 16,left['w']
     door=a.find { |r| r['role']=='door' }
     assert_in_delta 20,left['z']+left['h']-door['z']-door['h'],0.01
   end
