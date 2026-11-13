@@ -193,9 +193,15 @@ module SSDigitalLab
             # Top-edge grip below a continuous 20 mm shadow-line, never at
             # the vertical meeting edges of doors.
             (doors + result.select { |r| r['role']=='drawer_front' }).each do |door|
-              door['profile']='edge_45_top'
+              door['profile']=if p['kind']=='wall' || p['kind']=='corner_wall'
+                                'edge_45_bottom'
+                              elsif %w[tall wardrobe corner_tall].include?(p['kind'])
+                                'edge_45_center'
+                              else
+                                'edge_45_top'
+                              end
               door['bevel_mm']=[p['front_thickness']*0.65,12].min.round(2)
-              if door['role']=='door'
+              if door['role']=='door' && door['profile']=='edge_45_top'
                 adjustment=[20.0 - p['door_gap'], 0.0].max
                 door['h']=(door['h']-adjustment).round(4)
               end
