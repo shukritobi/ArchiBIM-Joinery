@@ -84,6 +84,26 @@ class JoineryLayoutV03Test < Minitest::Test
     assert_equal mods.size,a.count { |r| r['role']=='back' }
   end
 
+  def test_reveal_aligned_module_boundaries_across_widths
+    [1300, 1900, 2400, 2500, 3200, 4200].each do |width|
+      a=C.parts(preset('base',width:width,front:'doors'))
+      doors=a.select { |r| r['role']=='door' }
+      modules=a.select { |r| r['key'].match?(/module-\\d+-left/) }
+      assert modules.length>=2, "expected several carcasses at #{width}mm"
+      modules.each do |side|
+        n=side.fetch('module')
+        right=a.find { |r| r['key']=="module-#{n}-right" }
+        edge=right['x']+right['w']
+        assert_operator edge-side['x'],:<=,1200.001
+        assert doors.all? { |door|
+          door['x']+door['w']<=side['x']+0.01 ||
+            door['x']>=edge-0.01 ||
+            (door['x']>=side['x']-0.01 && door['x']+door['w']<=edge+0.01)
+        }, "Door cut by carcass boundary at width #{width}"
+      end
+    end
+  end
+
   def test_modular_drawers_are_rebuilt_per_carcass
     p=preset('base',width:2400,front:'drawers',drawer_count:3)
     a=C.parts(p)
