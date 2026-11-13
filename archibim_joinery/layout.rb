@@ -26,7 +26,8 @@ module SSDigitalLab
                    'path_wall_units'=>kind=='base','corner_filler'=>50,
                    'corner_ownership'=>'empty','island_style'=>'open',
                    'island_back_style'=>'low','waterfall_left'=>kind=='island',
-                   'waterfall_right'=>false,'top_shadow_gap'=>kind=='base' ? 20 : 0)
+                   'waterfall_right'=>false,'top_shadow_gap'=>kind=='base' ? 20 : 0,
+                   'end_panel_thickness'=>20)
           if kind == 'base'
             p['end_panel_left'] = true
             p['end_panel_right'] = true
@@ -104,11 +105,11 @@ module SSDigitalLab
             # An open snack bar: support is modelled separately, never assumed from stone.
             if p['end_panel_left'] && !p['waterfall_left']
               add_part(out,'island-support-left','Island Left End Support',0,0,0,
-                       p['panel_thickness'],d,h-t,'support',p)
+                       p.fetch('end_panel_thickness',p['panel_thickness']),d,h-t,'support',p)
             end
             if p['end_panel_right'] && !p['waterfall_right']
               add_part(out,'island-support-right','Island Right End Support',
-                       w-p['panel_thickness'],0,0,p['panel_thickness'],d,h-t,'support',p)
+                       w-p.fetch('end_panel_thickness',p['panel_thickness']),0,0,p.fetch('end_panel_thickness',p['panel_thickness']),d,h-t,'support',p)
             end
             case p['island_back_style']
             when 'low'
@@ -179,7 +180,7 @@ module SSDigitalLab
         def modular_parts(parts,p)
           cw=case_width(p); max=p['max_carcass_width']
           return parts if cw<=max+0.001
-          x0=p['filler_left']+(p['end_panel_left'] ? p['panel_thickness'] : 0)
+          x0=p['filler_left']+(p['end_panel_left'] ? p.fetch('end_panel_thickness',p['panel_thickness']) : 0)
           doors=parts.select { |a| a['role']=='door' }.sort_by { |a| a['x'] }
           # Seams follow the reveal between adjacent door leaves, not through a door.
           seams=[]
