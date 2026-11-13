@@ -84,7 +84,7 @@ module SSDigitalLab
         end_t = h.fetch('end_panel_thickness',h['panel_thickness'])
         w = h['width'] - h['filler_left'] - h['filler_right'] - end_t * (((h['end_panel_left'] ? 1 : 0) + (h['end_panel_right'] ? 1 : 0)))
         t = h['panel_thickness']
-        raise ArgumentError, 'Width too small for carcass and fillers' if w < (t * (h['divisions'] + 2)) + 100
+        raise ArgumentError, 'Width too small for carcass and fillers' if w < (h['kind'] == 'wall_panel' ? 30 : (t * (h['divisions'] + 2)) + 100)
         raise ArgumentError, 'Depth too small for carcass and back' if h['depth'] < [t * 4, h['back_thickness'] + h['back_recess'] + 30].max
         raise ArgumentError, 'Toe recess exceeds cabinet depth' if h['toe_recess'] + h['panel_thickness'] + h['front_thickness'] > h['depth']
         raise ArgumentError, 'Back panel recess exceeds cabinet depth' if h['back'] != 'none' && h['back_thickness'] + h['back_recess'] + 2*t > h['depth']

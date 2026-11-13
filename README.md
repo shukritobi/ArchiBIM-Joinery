@@ -8,11 +8,29 @@
 
 This is a permanent download link. After a successful build on `main`, GitHub Actions updates the release asset automatically. The latest version is always shown here first.
 
-**Standalone SketchUp Ruby extension | v0.3.0 Beta | SS Digital Lab**
+**Standalone SketchUp Ruby extension | v0.4.0 Beta | SS Digital Lab**
 
 A parametric BIM companion for [ArchiBIM](https://github.com/shukritobi/ArchiBIM), creating distinct panel-built assemblies rather than decorative single-mesh boxes.
 
-## What's new in v0.3.0 beta (13 November 2026)
+## What's new in v0.4.0 beta (13 November 2026)
+
+**Compact manager actions:** the sticky action row now has only **Place**, **Update**, **From Lines** and a **More** dropdown. Load Selected, Draw Path, Resize W/D/H, Refresh Native Scale, and **Eyedropper** live in More. The former long explanation and advanced-control override are moved out of the command dock. **Advanced settings** is an opt-in inside the cabinet library, not a requirement.
+
+**Eyedropper: Copy cabinet properties.** Choose **More > Eyedropper**, click a parametric Joinery source, then any number of **same-family targets**. Copies compatible materials, finishes, fronts, grips, internal configurations and family-specific construction. Keeps target UUID, name, outer dimensions, location, mount datum and wall anchor. A source also loads into the editor for new placement. Invalid target configurations are skipped safely. Esc exits. (Same conservative two-stage pattern as ArchiBIM Core.)
+
+**Floating basin cabinet:** new **Suspended Basin Vanity + Mirror** family, initially **900 W × 500 D × 550 H**, mounted **450 mm above the finished floor** (editable to 300 mm etc.), 20 mm worktop, cabinet body, conceptual inset/vessel basin, independent adjustable mirror and optional mirror LED. The basin is for visualization and preliminary coordination, not a cutout or plumbing template.
+
+**Feature/TV wall panel:** new **Wall / TV Feature Panel** family with **50 mm total projection** by default and adjustable width/height/thickness, optional vertical reveal joints and independent bottom/top/side LED strips. The panel can be placed over ArchiBIM walls or generated from native connected line paths.
+
+**Grip corrections:** wall/overhead units no longer receive an automatic top shadow/reveal. Tall and wardrobe units also avoid the top shadow; optional **middle-height recessed horizontal groove**, default **20 mm high × 10 mm deep** with centre **900 mm above finished floor**, or use knob/bar wardrobe hardware. A 45° integrated-grip option is now positioned by cabinet family (base top, wall bottom, tall middle).
+
+**Extended line tools:** native selected lines and Draw Cabinet Path now accept all top-level cabinet/feature families, rather than only base/wall/tall/desk. Orthogonal returns use appropriate blind-corner equivalents; islands with waterfalls allow straight paths only, avoiding false unsupported miter corners. Path end-unit finish panels are preserved.
+
+**Diagnosis + UI report:** use **Quantities & Diagnostics > Export Diagnosis + UI Logs ZIP** or the **Extensions > ArchiBIM Joinery: Diagnostics** menu. The ZIP includes `DIAGNOSIS_REPORT.txt/json`, `UI_REPORT.txt/json`, recent plugin events, persistent session JSONL log and a SketchUp viewport screenshot where supported. It audits part counts/keys, parameter normalization, model/transform metadata and UI events. Nothing is uploaded automatically. The UI captures button/field interactions and JavaScript errors.
+
+**Validation:** CI covers the parametric family tests, conservative eyedropper transfer, ZIP archive compatibility, Ruby syntax, HtmlDialog JavaScript syntax and RBZ packaging. **Physical SketchUp 2026 UI/geometry QA is still required.** See [v0.4.0 release notes](docs/RELEASE_NOTES_v0.4.0.md).
+
+## Previous: v0.3.0 beta (13 November 2026)
 
 **Island / breakfast bar:** choose open snack-bar construction (default) or an enclosed carcass. Starting values: **1800 W × 600 D × 1000 H mm**, **50 mm worktop**, left **45° waterfall** on by default and independent right waterfall toggle. Open options: low rear panel, top apron, full rear or no rear. A waterfall is modelled as a separate profiled panel joined by a genuine geometric 45° mitre. Structural supports are separate model parts, not inferred from the slab.
 
@@ -49,7 +67,8 @@ Default back reference is **Inner / back face**. The reference choice defines th
 ## Available parametric families
 
 - Base cabinets, wall cabinets, tall pantry units; refrigerator, oven and microwave tall housings
-- Desks / workstations, wardrobes, vanities
+- Desks / workstations, wardrobes, vanities and suspended basin vanities with mirrors
+- 50 mm (adjustable) feature / TV wall cladding panels with optional LED accents
 - Bookcases, TV consoles, reception counters
 - Open bays, hinged doors, drawers, or drawer-and-door combinations
 
@@ -66,6 +85,8 @@ Each unit is a top-level SketchUp Group. Each part is its own nested SketchUp Gr
 | Island | 1800 mm | **1000 mm** | **600 mm** | 0 mm |
 | Wardrobe | 1200 mm | 2400 mm | 600 mm | 0 mm |
 | Vanity | 900 mm | 850 mm | 500 mm | 0 mm |
+| Suspended basin vanity | 900 mm | 550 mm (20 mm worktop) | 500 mm | **450 mm** |
+| Feature / TV wall panel | 1800 mm | 2400 mm | **50 mm projection** | 0 mm |
 | Bookcase | 900 mm | 2100 mm | 320 mm | 0 mm |
 | TV Console | 1800 mm | 500 mm | 450 mm | 0 mm |
 | Reception | 1800 mm | 1100 mm | 650 mm | 0 mm |
