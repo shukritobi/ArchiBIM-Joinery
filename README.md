@@ -8,11 +8,34 @@
 
 This is a permanent download link. After a successful build on `main`, GitHub Actions updates the release asset automatically. The latest version is always shown here first.
 
-**Standalone SketchUp Ruby extension | v0.2.1 Beta | SS Digital Lab**
+**Standalone SketchUp Ruby extension | v0.3.0 Beta | SS Digital Lab**
 
 A parametric BIM companion for [ArchiBIM](https://github.com/shukritobi/ArchiBIM), creating distinct panel-built assemblies rather than decorative single-mesh boxes.
 
-## What's new in v0.2.1 beta
+## What's new in v0.3.0 beta (13 November 2026)
+
+**Island / breakfast bar:** choose open snack-bar construction (default) or an enclosed carcass. Starting values: **1800 W × 600 D × 1000 H mm**, **50 mm worktop**, left **45° waterfall** on by default and independent right waterfall toggle. Open options: low rear panel, top apron, full rear or no rear. A waterfall is modelled as a separate profiled panel joined by a genuine geometric 45° mitre. Structural supports are separate model parts, not inferred from the slab.
+
+**Cabinet paths:** select native SketchUp lines and press **Generate from Selected Lines**, or click **Draw Cabinet Path** and trace vertices (Enter to finish). Connected edges are automatically ordered. Choose a path at the **back face**, **mid-depth**, or **front face**, and choose left/right cabinet orientation. Only coplanar horizontal straight and orthogonal (90°) joins are accepted in this beta. L joins get an independent parametric blind-corner unit; every run is a separate top-level group. Base paths optionally create independent wall cabinets overhead (on by default).
+
+**Corners:** new corner base, wall, tall and desk families. The two **perpendicular 50 mm front returns** are independent pieces. Control whether the corner is an empty/blind bay or accessible from the front or perpendicular side. A geometric corner-planning algorithm handles inside and outside turns, trimming inside legs and bridging outside turns.
+
+**Carcass manufacturing logic:** automatically subdivide wide base, wall, tall and desk runs into carcass modules no wider than **1200 mm**, with **twin adjacent side panels** and independent top/bottom/back/shelf sets. For hinged fronts, seams follow door gaps, not the middle of a door. Drawer fronts and boxes are regenerated per module.
+
+**Updated base defaults:** no protruding handle, **20 mm upper finger/shadow gap**, finished left and right end panels. Existing cabinet data remains editable. The 45° integrated grip geometry has been reversed to a **rear-facing top finger chamfer**.
+
+**Validation:** all new pure Ruby geometry, layout and path tests run in GitHub Actions. A physical SketchUp 2026 inspection of mouse picking, 3D corner finishes, rendered mitres and LayOut output is still required before manufacturing. See [v0.3.0 build and QA notes](docs/RELEASE_NOTES_v0.3.0.md).
+
+### Quick start: native lines to cabinets
+
+1. With no group/component open for editing, use SketchUp's native **Line** tool to draw your base cabinet run on a single horizontal plane. Connected L-shaped lines are supported.
+2. Select the edges and open **Extensions > ArchiBIM Joinery > Joinery Manager**. Leave **Base Unit** selected, set the depth and back/front/centre path reference, and press **Generate from Selected Lines**.
+3. The base units, corner modules and (if enabled) overhead wall units are generated as individually selectable groups in one undoable operation. Use **Load Selected** to edit each.
+4. For an entirely new route without pre-existing lines, use **Draw Cabinet Path**, click the vertices, then press **Enter**. Escape cancels.
+
+Default back reference is **Inner / back face**. The reference choice defines the position of the SketchUp line relative to the generated cabinet depth, not a dimension-measurement convention. If the design requires 45° paths, branches, loops or curved returns, divide them into separate straight paths until non-orthogonal corner support is implemented.
+
+## Previous: v0.2.1 beta
 
 - **Reliable resizing:** after SketchUp native Scale is finished, select the **outer cabinet group** and click **Refresh Native Scale** in the sticky action toolbar. All panels rebuild using stored thicknesses. If SketchUp does not report scaling on the selected outer group, edit Width/Depth/Height and use **Resize to W / D / H** instead.
 - **UI options remain available:** cabinet-specific settings grey out, with **Allow advanced / normally irrelevant controls** to override.
@@ -40,6 +63,7 @@ Each unit is a top-level SketchUp Group. Each part is its own nested SketchUp Gr
 | Wall | 600 mm | 720 mm | 350 mm | **1450 mm bottom**, i.e. 600 mm above 850 mm worktop |
 | Tall | 600 mm | 2400 mm | 600 mm | 0 mm |
 | Desk | 1200 mm | 750 mm | 600 mm | 0 mm |
+| Island | 1800 mm | **1000 mm** | **600 mm** | 0 mm |
 | Wardrobe | 1200 mm | 2400 mm | 600 mm | 0 mm |
 | Vanity | 900 mm | 850 mm | 500 mm | 0 mm |
 | Bookcase | 900 mm | 2100 mm | 320 mm | 0 mm |
@@ -76,7 +100,7 @@ The extension can load without ArchiBIM Core; wall hosting and automatic back-to
 - `stretch`: wall length changes extend/shrink the cabinet towards the wall end, respecting the initial end gap and the current panel dimensions.
 - Changes are processed by a **deferred model observer** after SketchUp commits a transaction. This avoids modifying geometry from inside an observer callback.
 - **Known beta limitation:** Sync uses its own undoable operation, so an ArchiBIM wall change and dependent cabinet rebuild are not yet a *single atomic undo step*. The planned versioned ArchiBIM event API will support a coordinated operation.
-- In this beta, binding is supported for **root-level straight ArchiBIM walls**. Joinery cannot yet solve corner cabinets, two-wall-fit units, angled wall returns or arbitrary nested linked components.
+- **Wall binding** remains limited to root-level straight ArchiBIM walls. **Path-generated 90° blind corner modules are supported** as standalone joinery groups, but *two-wall binding*, angled joins and arbitrary nested host linkage are still unsupported.
 - The plugin does **not** automatically avoid ArchiBIM windows, doors, sockets or other collisions yet.
 - Native Scale now has an explicit **Refresh After Native Scale** command. It absorbs orthogonal X/Y/Z scale factors into cabinet dimensions, restores unit scale and regenerates fixed-thickness parts. Shearing or mirroring is rejected; wall-hosted refresh retains its station and uses fixed-width mode.
 - Auto-sync is in-memory and enabled by default when the plugin loads; it can be toggled in the manager. Use a copy of important models while testing.
@@ -102,7 +126,7 @@ The cutlist is **preliminary only**. It is generated from real rectangular part 
 
 ## Validation
 
-Pure-Ruby core: **20 tests / 77 assertions** at the v0.1 baseline. v0.2 adds an independent regression suite run by CI. Run `ruby test/test_core.rb` and `ruby test/test_enhancements.rb`. Check syntax with `ruby -c archibim_joinery/main.rb` and `ruby -c archibim_joinery/runtime_ext.rb`. Build a SketchUp extension archive by running `ruby build.rb` from the repo root. GitHub Actions runs the same checks, and creates an RBZ artifact.
+Pure-Ruby core: **20 tests / 77 assertions** at the v0.1 baseline. v0.2 adds an independent regression suite run by CI. Run `ruby test/test_core.rb`, `ruby test/test_enhancements.rb` and `ruby test/test_layout.rb`. Check syntax with `ruby -c archibim_joinery/main.rb` and `ruby -c archibim_joinery/runtime_ext.rb`. Build a SketchUp extension archive by running `ruby build.rb` from the repo root. GitHub Actions runs the same checks, and creates an RBZ artifact.
 
 This prototype was **not executed inside the SketchUp desktop runtime** in the packaging environment. In-app geometry generation, GUI callbacks and hosted wall transforms must be validated in SketchUp before production use.
 
