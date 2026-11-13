@@ -191,9 +191,8 @@ module SSDigitalLab
           # each module between 150 mm and the configured maximum width.
           seams=[]
           if doors.size>=2 && %w[doors combo].include?(p['front'])
-            candidates=[x0]+doors.each_cons(2).map do |a,b|
-              (a['x']+a['w']+b['x'])/2.0
-            end+[x0+cw]
+            midpoints=doors.each_cons(2).map { |a,b| (a['x']+a['w']+b['x'])/2.0 }
+            candidates=[x0]+midpoints+[x0+cw]
             best=Array.new(candidates.length)
             best[-1]=[]
             (candidates.length-2).downto(0) do |i|
