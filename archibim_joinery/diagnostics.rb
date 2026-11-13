@@ -7,6 +7,7 @@ require 'time'
 require 'tmpdir'
 require 'fileutils'
 require_relative 'v04_runtime'
+require_relative 'report_zip'
 
 module SSDigitalLab
   module ArchiBIMJoinery
@@ -148,29 +149,8 @@ module SSDigitalLab
         lines.join("\n")+"\n"
       end
 
-      # Portable ZIP without shell tools or external gems (store-only ZIP).
       def diagnostics_zip(entries)
-        local=''.b; central=''.b
-        entries.each do |name,value|
-          filename=name.to_s.encode('UTF-8').b
-          payload=value.to_s.b
-          crc=Zlib.crc32(payload)
-          size=payload.bytesize
-          offset=local.bytesize
-          local << [0x04034b50,20,0,0,0,0,crc,size,size,
-                    filename.bytesize,0].pack('VvvvvvVVVvv')
-          local << filename << payload
-          central << [0x02014b50,20,20,0,0,0,0,crc,size,size,
-                       filename.bytesize,0,0,0,0,0,offset].
-                         pack('VvvvvvvVVVvvvvvVV')
-          central << filename
-        end
-        count=entries.size
-        central_offset=local.bytesize
-        local << central
-        local << [0x06054b50,0,0,count,count,
-                  central.bytesize,central_offset,0].pack('VvvvvVVv')
-        local
+        ReportZip.encode(entries)
       end
 
       def export_diagnostic_bundle
