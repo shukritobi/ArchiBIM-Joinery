@@ -9,7 +9,7 @@ require_relative 'copy_recovery'
 module SSDigitalLab
   module ArchiBIMJoinery
     extend self
-    VERSION = '0.3.0'
+    VERSION = '0.4.0'
     DICT = 'SSDigitalLab_ArchiBIM_Joinery'
     ARCH_DICT = 'SSDigitalLab_ArchiBIM'
     @dialog = nil
@@ -702,3 +702,4 @@ end
 require_relative 'layout'
 require_relative 'runtime_ext'
 require_relative 'path_runtime'
+require_relative 'eyedropper'
