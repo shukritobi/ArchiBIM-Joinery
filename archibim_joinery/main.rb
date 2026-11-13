@@ -9,7 +9,7 @@ require_relative 'copy_recovery'
 module SSDigitalLab
   module ArchiBIMJoinery
     extend self
-    VERSION = '0.2.1'
+    VERSION = '0.3.0'
     DICT = 'SSDigitalLab_ArchiBIM_Joinery'
     ARCH_DICT = 'SSDigitalLab_ArchiBIM'
     @dialog = nil
@@ -693,4 +693,6 @@ module SSDigitalLab
 end
 
 # v0.2 features are loaded after base registration; these prepend without changing v0.1 data.
+require_relative 'layout'
 require_relative 'runtime_ext'
+require_relative 'path_runtime'
