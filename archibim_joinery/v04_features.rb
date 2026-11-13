@@ -17,7 +17,8 @@ module SSDigitalLab
         },
         'wall_panel'=>{
           'width'=>1800,'height'=>2400,'depth'=>50,'toe_height'=>0,'top_thickness'=>0,
-          'panel_thickness'=>10,'front'=>'open','back'=>'none','shelves'=>0
+          'panel_thickness'=>1,'front_thickness'=>1,'toe_recess'=>0,'back_recess'=>0,'back_thickness'=>0,
+          'front'=>'open','back'=>'none','shelves'=>0
         }
       ).freeze)
       prior_handles=const_get(:HANDLE_STYLES)
