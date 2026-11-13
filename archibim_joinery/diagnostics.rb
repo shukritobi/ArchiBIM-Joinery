@@ -78,7 +78,7 @@ module SSDigitalLab
             expected=Core.parts(norm)
             keys=parts.map{|r|r['key']}
             missing=expected.map{|r|r['key']}-keys
-            extra=keys-expected.map{|r|r['key']]
+            extra=keys-expected.map{|r|r['key']}
             checks<<{'type'=>'part_mismatch','missing'=>missing,'extra'=>extra} unless missing.empty? && extra.empty?
             if norm['kind']=='wall' && norm['top_shadow_gap'].to_f>0
               checks<<{'type'=>'unexpected_wall_top_shadow','gap_mm'=>norm['top_shadow_gap']}
