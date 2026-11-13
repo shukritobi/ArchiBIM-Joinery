@@ -7,7 +7,7 @@ module SSDigitalLab
     unless defined?(@registered) && @registered
       extension = SketchupExtension.new('ArchiBIM Joinery', 'archibim_joinery/main')
       extension.description = 'Parametric cabinets, desks and built-in joinery with ArchiBIM wall hosting.'
-      extension.version = '0.2.1'
+      extension.version = '0.3.0'
       extension.creator = 'SS Digital Lab'
       extension.copyright = '2026 SS Digital Lab'
       Sketchup.register_extension(extension, true)
