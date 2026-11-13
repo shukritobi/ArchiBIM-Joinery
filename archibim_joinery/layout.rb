@@ -45,7 +45,7 @@ module SSDigitalLab
           p = super
           d = presets(p['kind'])
           %w[max_carcass_width corner_filler top_shadow_gap].each do |key|
-            p[key] = value(d.merge(raw), key, 0, 100_000)
+            p[key] = value(d.merge(raw), key, 0, key == 'max_carcass_width' ? 1200 : 100_000)
           end
           raise ArgumentError, 'Carcass width must be at least 200 mm' if p['max_carcass_width'] < 200
           p['path_alignment'] = raw.fetch('path_alignment',d['path_alignment']).to_s
@@ -63,6 +63,8 @@ module SSDigitalLab
           raise ArgumentError,'Unknown island construction' unless %w[open carcass].include?(p['island_style'])
           raise ArgumentError,'Unknown island back' unless %w[none low apron full].include?(p['island_back_style'])
           if p['kind'] == 'island'
+            raise ArgumentError,'Open island does not support cabinet fronts; choose carcass mode' if
+              p['island_style']=='open' && p['front']!='open'
             raise ArgumentError,'Waterfall is thicker than usable island width' if
               (p['waterfall_left'] || p['waterfall_right']) && p['width'] <= 4*p['top_thickness']
             raise ArgumentError,'Island waterfall top must be at least 10 mm' if
