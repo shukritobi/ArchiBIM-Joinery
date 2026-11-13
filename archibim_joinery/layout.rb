@@ -150,7 +150,11 @@ module SSDigitalLab
           f=p['corner_filler']
           out=[]
           add_part(out,'corner-side-left','Corner Side Left',0,ft,toe,t,d-ft,ch,'carcass',p)
-          add_part(out,'corner-side-right','Corner Side Right',w-t,ft,toe,t,d-ft,ch,'carcass',p)
+          # Side-access doors cannot occupy the same volume as a full side panel.
+          # Leave that side open when access comes from the perpendicular run.
+          unless p['corner_ownership']=='right'
+            add_part(out,'corner-side-right','Corner Side Right',w-t,ft,toe,t,d-ft,ch,'carcass',p)
+          end
           add_part(out,'corner-floor','Corner Base',t,ft,toe,w-2*t,d-ft,t,'carcass',p)
           add_part(out,'corner-ceiling','Corner Head',t,ft,toe+ch-t,w-2*t,d-ft,t,'carcass',p)
           if top>0
