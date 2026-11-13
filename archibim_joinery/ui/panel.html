@@ -54,7 +54,7 @@ input:focus,select:focus{outline:1px solid #31b6aa}.check{flex-direction:row;ali
 <button class="primary" onclick="edit()">Update</button>
 <button class="primary" onclick="pathSelected()">From Lines</button>
 <details class="tool-toggle"><summary>More ▾</summary><div class="buttons">
-<button onclick="drawPath()">Draw Path</button><button onclick="window.sketchup.ready()">Load Selected</button>
+<button onclick="drawPath()">Draw Path</button><button onclick="window.sketchup.eyedropper()">Eyedropper · Match Settings</button><button onclick="window.sketchup.ready()">Load Selected</button>
 <button onclick="resize()">Resize W/D/H</button><button onclick="window.sketchup.scale_refresh()">Refresh Native Scale</button>
 </div></details></div>
 <div id="action-feedback" class="tiny-status" role="status" aria-live="polite">Ready</div>
@@ -180,12 +180,17 @@ input:focus,select:focus{outline:1px solid #31b6aa}.check{flex-direction:row;ali
 </main>
 <script>
 'use strict';
-const nums='end_panel_thickness corner_filler max_carcass_width top_shadow_gap width height depth mount_height panel_thickness front_thickness back_thickness back_recess toe_height toe_recess top_thickness support_thickness door_gap shelves drawer_count door_count divisions filler_left filler_right backsplash_height drawer_shadow_gap runner_length runner_clearance top_skirting_height max_door_width handle_offset handle_cc ceiling_height appliance_width appliance_height appliance_bottom appliance_side_clearance appliance_rear_clearance'.split(' ');
-const texts='island_style island_back_style corner_ownership path_alignment path_side kind name material top_material front back handle_style upper_storage runner_type'.split(' ');
+const nums='groove_height groove_depth groove_center_height mirror_width mirror_height mirror_bottom mirror_thickness basin_width basin_depth basin_height panel_led_offset panel_led_width wall_panel_gaps end_panel_thickness corner_filler max_carcass_width top_shadow_gap width height depth mount_height panel_thickness front_thickness back_thickness back_recess toe_height toe_recess top_thickness support_thickness door_gap shelves drawer_count door_count divisions filler_left filler_right backsplash_height drawer_shadow_gap runner_length runner_clearance top_skirting_height max_door_width handle_offset handle_cc ceiling_height appliance_width appliance_height appliance_bottom appliance_side_clearance appliance_rear_clearance'.split(' ');
+const texts='basin_style island_style island_back_style corner_ownership path_alignment path_side kind name material top_material front back handle_style upper_storage runner_type'.split(' ');
 let didLoadSelection=false;
 const el=id=>document.getElementById(id);
-function collect(){const out={};for(const id of nums) out[id]=Number(el(id).value);for(const id of texts)out[id]=el(id).value;for(const id of ['end_panel_left','end_panel_right','floor_finish_panels','auto_doors','auto_wall_orient','box_up','top_skirting','waterfall_left','waterfall_right','path_wall_units'])out[id]=el(id).checked;return out}
-function fill(p){for(const id of nums){if(p[id]!==undefined)el(id).value=p[id]}for(const id of texts){if(p[id]!==undefined)el(id).value=p[id]}for(const id of ['end_panel_left','end_panel_right','floor_finish_panels','auto_doors','auto_wall_orient','box_up','top_skirting','waterfall_left','waterfall_right','path_wall_units']){if(p[id]!==undefined)el(id).checked=!!p[id]}syncApplicability();updateSkirtingLabel();}
+function collect(){const out={};for(const id of nums) out[id]=Number(el(id).value);for(const id of texts)out[id]=el(id).value;for(const id of ['end_panel_left','end_panel_right','floor_finish_panels','auto_doors','auto_wall_orient','box_up','top_skirting','waterfall_left','waterfall_right','path_wall_units','mirror_enabled','mirror_led','panel_led_bottom','panel_led_top','panel_led_left','panel_led_right'])out[id]=el(id).checked;return out}
+function fill(p){for(const id of nums){if(p[id]!==undefined)el(id).value=p[id]}for(const id of texts){if(p[id]!==undefined)el(id).value=p[id]}for(const id of ['end_panel_left','end_panel_right','floor_finish_panels','auto_doors','auto_wall_orient','box_up','top_skirting','waterfall_left','waterfall_right','path_wall_units','mirror_enabled','mirror_led','panel_led_bottom','panel_led_top','panel_led_left','panel_led_right']){if(p[id]!==undefined)el(id).checked=!!p[id]}syncApplicability();updateSkirtingLabel();}
+function exportDiagnostics(){
+  sendDiagnosticSnapshot('manual_export');
+  emitUI('request_export','diagnostics','qa_bundle');
+  window.sketchup.diagnostic_export();
+}
 function place(){window.sketchup.place(JSON.stringify(collect()))}
 function pathSelected(){window.sketchup.path_selected(JSON.stringify(collect()))}
 function drawPath(){window.sketchup.path_draw(JSON.stringify(collect()))}
@@ -205,7 +210,16 @@ function syncApplicability(){
   const appliance=['fridge_tall','oven_tall','microwave_tall'].includes(kind);
   const doors=['doors','combo'].includes(front),drawers=['drawers','combo'].includes(front);
   const tall=['wall','tall','corner_wall','corner_tall','fridge_tall','oven_tall','microwave_tall'].includes(kind);
-  const island=kind==='island',corner=kind.startsWith('corner_'),path=['base','wall','tall','desk'].includes(kind);
+  const island=kind==='island',corner=kind.startsWith('corner_'),path=true;
+  const basin=kind==='basin_vanity',panel=kind==='wall_panel';
+  const midGrip=['tall','wardrobe','corner_tall'].includes(kind);
+  el('vanity-section').hidden=!basin&&!el('show_all_options').checked;
+  el('wall-panel-section').hidden=!panel&&!el('show_all_options').checked;
+  ['mirror_enabled','mirror_led','mirror_width','mirror_height','mirror_bottom','mirror_thickness',
+   'basin_style','basin_width','basin_depth','basin_height'].forEach(k=>applicability(k,basin));
+  ['panel_led_bottom','panel_led_top','panel_led_left','panel_led_right',
+   'panel_led_offset','panel_led_width','wall_panel_gaps'].forEach(k=>applicability(k,panel));
+  ['groove_center_height','groove_height','groove_depth'].forEach(k=>applicability(k,midGrip&&(handle==='center_groove'||handle==='edge_45')));
   ['island_style','island_back_style','waterfall_left','waterfall_right'].forEach(k=>applicability(k,island));
   ['corner_ownership','corner_filler'].forEach(k=>applicability(k,corner||path));
   ['path_alignment','path_side','max_carcass_width'].forEach(k=>applicability(k,path));
@@ -217,7 +231,8 @@ function syncApplicability(){
   ['handle_offset','handle_cc'].forEach(k=>applicability(k,handle==='bar'||handle==='knob'));
   ['ceiling_height','box_up'].forEach(k=>applicability(k,tall));
   ['top_skirting','top_skirting_height'].forEach(k=>applicability(k,Number(el('top_thickness').value)>0));
-  ['toe_height','toe_recess'].forEach(k=>applicability(k,Number(el('toe_height').value)>0||!['wall','desk'].includes(kind)));
+  ['toe_height','toe_recess'].forEach(k=>applicability(k,!['wall','wall_panel','desk','basin_vanity'].includes(kind)));
+  ['front','door_gap','back'].forEach(k=>applicability(k,!panel));
   ['filler_left','filler_right','end_panel_left','end_panel_right','end_panel_thickness','door_gap','front','back','material'].forEach(k=>applicability(k,true));
 }
 function bind(){window.sketchup.bind(el('side').value,el('mode').value)}
