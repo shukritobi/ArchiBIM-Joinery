@@ -64,6 +64,7 @@ input:focus,select:focus{outline:1px solid #31b6aa}.check{flex-direction:row;ali
 </div><p class="tip">Selected Lines accepts native SketchUp edges on one horizontal plane, including connected 90° runs. Non-orthogonal turns and closed loops are rejected instead of creating bad joins. Corner modules have two perpendicular fillers, initially 50 mm. Island worktop mitres are true 45° profiles; validate fabrication and supports before manufacturing.</p></section>
 <section><h2>Construction & Materials</h2><div class="grid">
 <label>Carcass panels (mm)<input id="panel_thickness" type="number" min="1"></label>
+<label>Finished end-panel thickness (mm)<input id="end_panel_thickness" type="number" min="1"></label>
 <label>Door/front panels (mm)<input id="front_thickness" type="number" min="1"></label>
 <label>Back panel (mm)<input id="back_thickness" type="number" min="0"></label>
 <label>Back recess (mm)<input id="back_recess" type="number" min="0"></label>
@@ -131,7 +132,7 @@ input:focus,select:focus{outline:1px solid #31b6aa}.check{flex-direction:row;ali
 </main>
 <script>
 'use strict';
-const nums='corner_filler max_carcass_width top_shadow_gap width height depth mount_height panel_thickness front_thickness back_thickness back_recess toe_height toe_recess top_thickness support_thickness door_gap shelves drawer_count door_count divisions filler_left filler_right backsplash_height drawer_shadow_gap runner_length runner_clearance top_skirting_height max_door_width handle_offset handle_cc ceiling_height appliance_width appliance_height appliance_bottom appliance_side_clearance appliance_rear_clearance'.split(' ');
+const nums='end_panel_thickness corner_filler max_carcass_width top_shadow_gap width height depth mount_height panel_thickness front_thickness back_thickness back_recess toe_height toe_recess top_thickness support_thickness door_gap shelves drawer_count door_count divisions filler_left filler_right backsplash_height drawer_shadow_gap runner_length runner_clearance top_skirting_height max_door_width handle_offset handle_cc ceiling_height appliance_width appliance_height appliance_bottom appliance_side_clearance appliance_rear_clearance'.split(' ');
 const texts='island_style island_back_style corner_ownership path_alignment path_side kind name material top_material front back handle_style upper_storage runner_type'.split(' ');
 let didLoadSelection=false;
 const el=id=>document.getElementById(id);
@@ -169,7 +170,7 @@ function syncApplicability(){
   ['ceiling_height','box_up'].forEach(k=>applicability(k,tall));
   ['top_skirting','top_skirting_height'].forEach(k=>applicability(k,Number(el('top_thickness').value)>0));
   ['toe_height','toe_recess'].forEach(k=>applicability(k,Number(el('toe_height').value)>0||!['wall','desk'].includes(kind)));
-  ['filler_left','filler_right','end_panel_left','end_panel_right','door_gap','front','back','material'].forEach(k=>applicability(k,true));
+  ['filler_left','filler_right','end_panel_left','end_panel_right','end_panel_thickness','door_gap','front','back','material'].forEach(k=>applicability(k,true));
 }
 function bind(){window.sketchup.bind(el('side').value,el('mode').value)}
 window.joineryPreset=function(p){fill(p);didLoadSelection=false;el('action-feedback').textContent='Cabinet preset loaded. Review dimensions before placement.';};
