@@ -122,7 +122,7 @@ class JoineryLayoutV03Test < Minitest::Test
     p=C.normalize(preset('base'))
     assert_raises(ArgumentError) { Planner.plan([[0,0,0],[3000,0,12]],p) }
     assert_raises(ArgumentError) { Planner.plan([[0,0,0],[3000,0,0],[4000,1000,0]],p) }
-    assert_raises(ArgumentError) { Planner.plan([[0,0,0],[300,0,0],[300,200,0]],p) }
+    assert_raises(ArgumentError) { Planner.plan([[0,0,0],[300,0,0],[300,150,0]],p) }
     assert_raises(ArgumentError) { C.normalize(preset('base',path_alignment:'diagonal')) }
     assert_raises(ArgumentError) { C.normalize(preset('corner_base',corner_filler:400)) }
   end
