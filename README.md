@@ -22,7 +22,7 @@ A parametric BIM companion for [ArchiBIM](https://github.com/shukritobi/ArchiBIM
 
 **Carcass manufacturing logic:** automatically subdivide wide base, wall, tall and desk runs into carcass modules no wider than **1200 mm**, with **twin adjacent side panels** and independent top/bottom/back/shelf sets. For hinged fronts, seams follow door gaps, not the middle of a door. Drawer fronts and boxes are regenerated per module.
 
-**Updated base defaults:** no protruding handle, **20 mm upper finger/shadow gap**, finished left and right end panels. Existing cabinet data remains editable. The 45° integrated grip geometry has been reversed to a **rear-facing top finger chamfer**.
+**Updated base defaults:** no protruding handle, **20 mm upper finger/shadow gap**, **20 mm finished left and right end panels**, independently configurable from the **16 mm carcass**. Existing cabinet data remains editable. The 45° integrated grip geometry has been reversed to a **rear-facing top finger chamfer**.
 
 **Validation:** all new pure Ruby geometry, layout and path tests run in GitHub Actions. A physical SketchUp 2026 inspection of mouse picking, 3D corner finishes, rendered mitres and LayOut output is still required before manufacturing. See [v0.3.0 build and QA notes](docs/RELEASE_NOTES_v0.3.0.md).
 
