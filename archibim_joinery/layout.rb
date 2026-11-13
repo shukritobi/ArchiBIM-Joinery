@@ -186,30 +186,29 @@ module SSDigitalLab
           return parts if cw<=max+0.001
           x0=p['filler_left']+(p['end_panel_left'] ? p.fetch('end_panel_thickness',p['panel_thickness']) : 0)
           doors=parts.select { |a| a['role']=='door' }.sort_by { |a| a['x'] }
-          # Seams follow the reveal between adjacent door leaves, not through a door.
+          # Never cut a door leaf with a carcass division. Find a legal chain
+          # of whole-leaf module boundaries using dynamic programming, with
+          # each module between 150 mm and the configured maximum width.
           seams=[]
           if doors.size>=2 && %w[doors combo].include?(p['front'])
-            last=x0
-            doors.each_cons(2) do |a,b|
-              seam=(a['x']+a['w']+b['x'])/2.0
-              if seam-last>max-10
-                previous=(a['x']-p['door_gap']/2.0)
-                raise ArgumentError,'Door leaf too wide to split carcass' if previous-last>max
-                seams << previous if previous>last+100
-                last=seams.last || last
+            candidates=[x0]+doors.each_cons(2).map do |a,b|
+              (a['x']+a['w']+b['x'])/2.0
+            end+[x0+cw]
+            best=Array.new(candidates.length)
+            best[-1]=[]
+            (candidates.length-2).downto(0) do |i|
+              choices=((i+1)...candidates.length).select do |j|
+                width=candidates[j]-candidates[i]
+                width>=150 && width<=max+0.001 && best[j]
               end
+              next if choices.empty?
+              # Fewest carcasses first, then widest feasible modules.
+              j=choices.min_by { |idx| [best[idx].length,-(candidates[idx]-candidates[i])] }
+              best[i]=[j]+best[j]
             end
-            if cw-(last-x0)>max
-              doors.each_cons(2) do |a,b|
-                seam=(a['x']+a['w']+b['x'])/2.0
-                if seam-last>=max*0.5 && seam-last<=max && x0+cw-seam>=150
-                  seams<<seam;last=seam
-                end
-              end
-            end
-          end
-          if seams.empty? || ([x0]+seams+[x0+cw]).each_cons(2).any? { |a,b| b-a>max+0.01 }
-            seams=[]
+            raise ArgumentError,'Cannot divide door leaves into modules within maximum carcass width' unless best[0]
+            seams=best[0][0...-1].map { |i| candidates[i] }
+          else
             count=(cw/max).ceil
             (1...count).each { |i| seams << x0+cw*i/count.to_f }
           end
