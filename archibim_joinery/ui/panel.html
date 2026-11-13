@@ -252,10 +252,43 @@ function safe(v){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;'
 el('kind').addEventListener('change',()=>window.sketchup.preset(el('kind').value));
 ['front','handle_style','runner_type','top_skirting','top_thickness','toe_height','island_style'].forEach(k=>el(k).addEventListener('change',syncApplicability));
 el('top_skirting_height').addEventListener('input',updateSkirtingLabel);
+const uiHistory=[];
+function emitUI(action,control='',value=''){
+  try{
+    const data={at:new Date().toISOString(),action:String(action).slice(0,80),
+      control:String(control).slice(0,100),kind:el('kind').value,
+      value:String(value).slice(0,250),width:window.innerWidth,height:window.innerHeight};
+    uiHistory.push(data);if(uiHistory.length>200)uiHistory.shift();
+    if(window.sketchup&&window.sketchup.diagnostic_event)
+      window.sketchup.diagnostic_event(JSON.stringify(data));
+  }catch(_error){}
+}
+function sendDiagnosticSnapshot(reason){
+  try{
+    const snap={reason,kind:el('kind').value,width:window.innerWidth,
+      height:window.innerHeight,scroll_y:window.scrollY,selected:didLoadSelection,
+      advanced:el('show_all_options').checked,controls:collect(),
+      recent_events:uiHistory.slice(-100)};
+    if(window.sketchup&&window.sketchup.diagnostic_snapshot)
+      window.sketchup.diagnostic_snapshot(JSON.stringify(snap));
+  }catch(_error){}
+}
+window.addEventListener('error',event=>emitUI('javascript_error','window',event.message||'Unknown JS error'));
+window.addEventListener('unhandledrejection',event=>emitUI('promise_error','window',String(event.reason||'Unhandled rejection')));
+document.addEventListener('change',event=>{
+ const target=event.target;
+ if(target&&target.id)emitUI('control_change',target.id,
+   target.type==='checkbox'?String(target.checked):target.value||'');
+});
 document.addEventListener('click',event=>{
   const command=event.target.closest('button[onclick]');
-  if(command)el('action-feedback').textContent='Sending '+command.textContent.trim()+' to SketchUp…';
+  if(command){
+    const label=command.textContent.trim();
+    el('action-feedback').textContent=label+' requested';
+    emitUI('button_click',label);
+  }
 },true);
+emitUI('ui_open','init','v0.4.0');
 window.sketchup.preset('base');
 window.sketchup.ready();
 </script></body></html>
