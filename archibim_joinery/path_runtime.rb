@@ -39,11 +39,16 @@ module SSDigitalLab
 
       def create_from_path_points(params, paths)
         p=Core.normalize(params)
-        raise ArgumentError,'Draw a base, wall, tall or desk path' unless %w[base wall tall desk].include?(p['kind'])
+        raise ArgumentError,'Choose a cabinet or panel family (not a standalone corner piece)' if
+          p['kind'].start_with?('corner_')
+        raise ArgumentError,'Unsupported cabinet path family' unless Core::KINDS.include?(p['kind'])
         raise ArgumentError,'No cabinet paths found' if paths.empty?
         jobs=[]
         paths.each do |points|
           layouts=[[p,PathPlanner.plan(points,p)]]
+          if p['kind']=='island' && !layouts[0][1]['corners'].empty?
+            raise ArgumentError,'Island waterfall paths must be straight; place independent islands for corners'
+          end
           if p['kind']=='base' && p['path_wall_units']
             overhead=Core.presets('wall').merge(
               'material'=>p['material'],'top_material'=>p['top_material'],
@@ -57,7 +62,8 @@ module SSDigitalLab
             layout['runs'].each do |run|
               # Very long path legs must not hit the 12-door ceiling or produce
               # a single oversized root Group. Each run is independently editable.
-              count=(run['length']/4800.0).ceil
+              max_length=Core::APPLIANCES.include?(config['kind']) ? config['width'] : 4800.0
+              count=(run['length']/max_length).ceil
               step_length=run['length']/count
               count.times do |idx|
                 unit=run.dup
@@ -66,14 +72,25 @@ module SSDigitalLab
                 u=run['xaxis']
                 unit['origin']=[origin[0]+u[0]*step_length*idx,
                                 origin[1]+u[1]*step_length*idx,origin[2]]
+                first=(run.equal?(layout['runs'].first) && idx==0)
+                last=(run.equal?(layout['runs'].last) && idx==count-1)
                 h=config.merge('width'=>step_length,
-                               'end_panel_left'=>false,'end_panel_right'=>false,
-                               'filler_left'=>0,'filler_right'=>0)
+                  'end_panel_left'=>first && config['end_panel_left'],
+                  'end_panel_right'=>last && config['end_panel_right'],
+                  'waterfall_left'=>config['waterfall_left'] && first,
+                  'waterfall_right'=>config['waterfall_right'] && last,
+                  'filler_left'=>first ? config['filler_left'] : 0,
+                  'filler_right'=>last ? config['filler_right'] : 0)
                 jobs << [Core.normalize(h),unit]
               end
             end
             layout['corners'].each do |corner|
-              corner_kind='corner_'+config['kind']
+              corner_kind=case config['kind']
+                when 'base','wall','tall','desk' then 'corner_'+config['kind']
+                when 'wardrobe','bookcase','fridge_tall','oven_tall','microwave_tall' then 'corner_tall'
+                when 'wall_panel' then 'wall_panel'
+                else 'corner_base'
+              end
               h=Core.presets(corner_kind).merge(
                 'width'=>config['depth'],'depth'=>config['depth'],
                 'height'=>config['height'],'mount_height'=>config['mount_height'],
@@ -82,6 +99,10 @@ module SSDigitalLab
                 'corner_filler'=>config['corner_filler'],
                 'corner_ownership'=>config['corner_ownership'],
                 'back'=>config['back'],'front'=>'open')
+              if corner_kind=='wall_panel'
+                h['wall_panel_gaps']=0
+                %w[panel_led_top panel_led_bottom panel_led_left panel_led_right].each{|key|h[key]=false}
+              end
               jobs << [Core.normalize(h),corner]
             end
           end
