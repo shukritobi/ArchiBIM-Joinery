@@ -9,7 +9,7 @@ require_relative 'copy_recovery'
 module SSDigitalLab
   module ArchiBIMJoinery
     extend self
-    VERSION = '0.2.1'
+    VERSION = '0.3.0'
     DICT = 'SSDigitalLab_ArchiBIM_Joinery'
     ARCH_DICT = 'SSDigitalLab_ArchiBIM'
     @dialog = nil
@@ -32,7 +32,13 @@ module SSDigitalLab
       raw = entity.get_attribute(DICT, 'data')
       return nil if raw.nil?
       data = JSON.parse(raw)
-      data.is_a?(Hash) && data['schema'].to_i == Core::SCHEMA && data['params'].is_a?(Hash) ? data : nil
+      return nil unless data.is_a?(Hash) && data['schema'].to_i == Core::SCHEMA && data['params'].is_a?(Hash)
+      # Legacy v0.2.x cabinets used carcass thickness for finished ends.
+      # Do not silently change their physical panel dimensions on first edit.
+      unless data['params'].key?('end_panel_thickness')
+        data['params']['end_panel_thickness'] = data['params'].fetch('panel_thickness',16)
+      end
+      data
     rescue JSON::ParserError
       nil
     end
@@ -693,4 +699,6 @@ module SSDigitalLab
 end
 
 # v0.2 features are loaded after base registration; these prepend without changing v0.1 data.
+require_relative 'layout'
 require_relative 'runtime_ext'
+require_relative 'path_runtime'

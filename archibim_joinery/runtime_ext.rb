@@ -13,10 +13,10 @@ module SSDigitalLab
           next unless raw
           part=JSON.parse(raw)
           if part['profile']=='edge_45_top'
-            # A continuous horizontal grip, bevelled across the top of the front.
+            # A continuous finger-access 45-degree grip behind the top front edge.
             w=part['w'].mm; d=part['d'].mm; h=part['h'].mm
             bevel=[part['bevel_mm'].mm,d*0.75,h*0.2].min
-            points=[[0,0,0],[0,d,0],[0,d,h],[0,bevel,h],[0,0,h-bevel]]
+            points=[[0,0,0],[0,d,0],[0,d,h-bevel],[0,d-bevel,h],[0,0,h]]
             replace_profile(part_group,part,points,w,X_AXIS)
           elsif part['shape']=='cylinder'
             replace_round_handle(part_group,part)

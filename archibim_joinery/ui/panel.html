@@ -33,23 +33,38 @@ input:focus,select:focus{outline:1px solid #31b6aa}.check{flex-direction:row;ali
 }
 @media (max-width:340px){.buttons{gap:5px}section:not(.command-dock) .buttons button{flex-basis:100%}}
 </style></head><body>
-<header><div class="topline"><h1>ArchiBIM <span style="color:#5bd2c9">Joinery</span></h1><span class="badge">BETA 0.2.1</span></div><small>Parametric Cabinets · Desks · Built-ins</small></header>
+<header><div class="topline"><h1>ArchiBIM <span style="color:#5bd2c9">Joinery</span></h1><span class="badge">BETA 0.3.0</span></div><small>Parametric Cabinets · Desks · Built-ins</small></header>
 <main>
 <section class="command-dock"><h2>Cabinet Actions</h2>
 <div class="buttons"><button class="primary" onclick="place()">+ Place New</button><button class="primary" onclick="edit()">Update Selected</button><button onclick="resize()">Resize to W / D / H</button><button onclick="window.sketchup.scale_refresh()">Refresh Native Scale</button><button onclick="window.sketchup.ready()">Load Selected</button></div>
+<div class="buttons"><button class="primary" onclick="pathSelected()">Generate from Selected Lines</button><button onclick="drawPath()">Draw Cabinet Path</button></div>
 <p id="action-feedback" class="info" role="status" aria-live="polite" aria-atomic="true">Ready for cabinet actions.</p>
 <p class="info">To use native Scale: finish the Scale action in SketchUp, select the outer cabinet group, then press Refresh. For reliable resizing without native Scale, edit the dimensions below and press Resize.</p>
 <label class="check"><input id="show_all_options" type="checkbox" onchange="syncApplicability()">Allow advanced / normally irrelevant controls</label></section>
 <section><h2>Cabinet Library</h2><div class="grid">
-<label class="span2">Cabinet / built-in family<select id="kind"><optgroup label="Kitchen Cabinets"><option value="base">Base Unit</option><option value="wall">Wall / Overhead Unit</option><option value="tall">Tall Unit / Pantry</option><option value="fridge_tall">Fridge Tall Unit</option><option value="oven_tall">Oven Tall Unit</option><option value="microwave_tall">Microwave Tall Unit</option></optgroup><optgroup label="Other Built-ins"><option value="desk">Desk / Workstation</option><option value="wardrobe">Wardrobe</option><option value="vanity">Vanity Cabinet</option><option value="bookcase">Bookcase / Shelving</option><option value="tv_console">TV Console</option><option value="reception">Reception Counter</option></optgroup></select></label>
+<label class="span2">Cabinet / built-in family<select id="kind"><optgroup label="Kitchen Cabinets"><option value="base">Base Unit</option><option value="island">Island / Breakfast Bar</option><option value="corner_base">Corner Base Unit</option><option value="corner_wall">Corner Wall / Overhead Unit</option><option value="corner_tall">Corner Tall Unit</option><option value="wall">Wall / Overhead Unit</option><option value="tall">Tall Unit / Pantry</option><option value="fridge_tall">Fridge Tall Unit</option><option value="oven_tall">Oven Tall Unit</option><option value="microwave_tall">Microwave Tall Unit</option></optgroup><optgroup label="Other Built-ins"><option value="desk">Desk / Workstation</option><option value="corner_desk">Corner Desk</option><option value="wardrobe">Wardrobe</option><option value="vanity">Vanity Cabinet</option><option value="bookcase">Bookcase / Shelving</option><option value="tv_console">TV Console</option><option value="reception">Reception Counter</option></optgroup></select></label>
 <label class="span2">Description / name<input id="name" type="text" maxlength="120"></label>
 <label>Width (mm)<input id="width" type="number" min="100"></label>
 <label>Overall height (mm)<input id="height" type="number" min="100"></label>
 <label>Overall depth (mm)<input id="depth" type="number" min="100"></label>
 <label>Mount height above host floor (mm)<input id="mount_height" type="number" min="0"></label>
 </div><p class="tip">Base height is measured to the top of the worktop. For a wall cabinet, 1450 mm mounting height gives a 600 mm clear gap above an 850 mm countertop.</p></section>
+<section><h2>Island, Corner &amp; Cabinet Path</h2><div class="grid">
+<label>Island construction<select id="island_style"><option value="open">Open snack bar / support panels</option><option value="carcass">Enclosed storage carcass</option></select></label>
+<label>Island rear / lower back<select id="island_back_style"><option value="low">Lower back panel (200 mm)</option><option value="apron">Upper rear apron (200 mm)</option><option value="full">Full rear back</option><option value="none">No rear panel</option></select></label>
+<label class="check"><input id="waterfall_left" type="checkbox">Left waterfall, 45° mitre</label>
+<label class="check"><input id="waterfall_right" type="checkbox">Right waterfall, 45° mitre</label>
+<label>Corner ownership / access<select id="corner_ownership"><option value="empty">Open / blind corner</option><option value="left">Front run controls corner</option><option value="right">Perpendicular run controls corner</option></select></label>
+<label>Inner corner filler (mm)<input id="corner_filler" type="number" min="0" max="150" step="5"></label>
+<label>Cabinet path line reference<select id="path_alignment"><option value="inner">Inner / back face</option><option value="center">Mid-depth / centre</option><option value="outer">Outer / front face</option></select></label>
+<label>Cabinet back side of line<select id="path_side"><option value="left">Left of path direction</option><option value="right">Right of path direction</option></select></label>
+<label>Max carcass module width (mm)<input id="max_carcass_width" type="number" min="200" max="1200" step="50"></label>
+<label>Handle-free top shadow reveal (mm)<input id="top_shadow_gap" type="number" min="0" max="50"></label>
+<label class="check span2"><input id="path_wall_units" type="checkbox">When tracing base units, also generate separate wall units above</label>
+</div><p class="tip">Selected Lines accepts native SketchUp edges on one horizontal plane, including connected 90° runs. Non-orthogonal turns and closed loops are rejected instead of creating bad joins. Corner modules have two perpendicular fillers, initially 50 mm. Island worktop mitres are true 45° profiles; validate fabrication and supports before manufacturing.</p></section>
 <section><h2>Construction & Materials</h2><div class="grid">
 <label>Carcass panels (mm)<input id="panel_thickness" type="number" min="1"></label>
+<label>Finished end-panel thickness (mm)<input id="end_panel_thickness" type="number" min="1"></label>
 <label>Door/front panels (mm)<input id="front_thickness" type="number" min="1"></label>
 <label>Back panel (mm)<input id="back_thickness" type="number" min="0"></label>
 <label>Back recess (mm)<input id="back_recess" type="number" min="0"></label>
@@ -97,7 +112,7 @@ input:focus,select:focus{outline:1px solid #31b6aa}.check{flex-direction:row;ali
 <label>Storage above appliance<select id="upper_storage"><option value="none">None</option><option value="open">Open</option><option value="doors">Closed doors</option></select></label>
 <label class="check"><input id="box_up" type="checkbox">Box up to ceiling</label>
 <label>Ceiling level above floor (mm)<input id="ceiling_height" type="number" min="0"></label>
-</div><p class="tip">Appliance dimensions are placeholders, not appliance installation approvals. Check exact model's cutout, airflow, power and door swing instructions. 45° integrated grips bevel the upper horizontal front edge after the 20 mm shadow-line.</p></section>
+</div><p class="tip">Appliance dimensions are placeholders, not appliance installation approvals. Check exact model's cutout, airflow, power and door swing instructions. 45° integrated grips bevel the upper rear edge of the front, leaving a finger-access chamfer behind the visible face.</p></section>
 <section><h2>Scale &amp; 2D Documentation</h2>
 <p class="tip">Finish SketchUp's native Scale tool, then select the OUTER cabinet group and click Refresh. The body is rebuilt at the new width/depth/height while keeping panel material thickness unchanged. Mirroring and shear are not supported.</p>
 <div class="buttons"><button onclick="window.sketchup.scale_refresh()">Refresh After Native Scale</button><button onclick="window.sketchup.dxf()">Selected DXF (Plan + Elevation)</button><button onclick="window.sketchup.dxf_all()">Batch DXF for All Cabinets</button><button onclick="window.sketchup.mcp_json()">Export AI / MCP JSON</button></div>
@@ -117,13 +132,15 @@ input:focus,select:focus{outline:1px solid #31b6aa}.check{flex-direction:row;ali
 </main>
 <script>
 'use strict';
-const nums='width height depth mount_height panel_thickness front_thickness back_thickness back_recess toe_height toe_recess top_thickness support_thickness door_gap shelves drawer_count door_count divisions filler_left filler_right backsplash_height drawer_shadow_gap runner_length runner_clearance top_skirting_height max_door_width handle_offset handle_cc ceiling_height appliance_width appliance_height appliance_bottom appliance_side_clearance appliance_rear_clearance'.split(' ');
-const texts='kind name material top_material front back handle_style upper_storage runner_type'.split(' ');
+const nums='end_panel_thickness corner_filler max_carcass_width top_shadow_gap width height depth mount_height panel_thickness front_thickness back_thickness back_recess toe_height toe_recess top_thickness support_thickness door_gap shelves drawer_count door_count divisions filler_left filler_right backsplash_height drawer_shadow_gap runner_length runner_clearance top_skirting_height max_door_width handle_offset handle_cc ceiling_height appliance_width appliance_height appliance_bottom appliance_side_clearance appliance_rear_clearance'.split(' ');
+const texts='island_style island_back_style corner_ownership path_alignment path_side kind name material top_material front back handle_style upper_storage runner_type'.split(' ');
 let didLoadSelection=false;
 const el=id=>document.getElementById(id);
-function collect(){const out={};for(const id of nums) out[id]=Number(el(id).value);for(const id of texts)out[id]=el(id).value;for(const id of ['end_panel_left','end_panel_right','floor_finish_panels','auto_doors','auto_wall_orient','box_up','top_skirting'])out[id]=el(id).checked;return out}
-function fill(p){for(const id of nums){if(p[id]!==undefined)el(id).value=p[id]}for(const id of texts){if(p[id]!==undefined)el(id).value=p[id]}for(const id of ['end_panel_left','end_panel_right','floor_finish_panels','auto_doors','auto_wall_orient','box_up','top_skirting']){if(p[id]!==undefined)el(id).checked=!!p[id]}syncApplicability();updateSkirtingLabel();}
+function collect(){const out={};for(const id of nums) out[id]=Number(el(id).value);for(const id of texts)out[id]=el(id).value;for(const id of ['end_panel_left','end_panel_right','floor_finish_panels','auto_doors','auto_wall_orient','box_up','top_skirting','waterfall_left','waterfall_right','path_wall_units'])out[id]=el(id).checked;return out}
+function fill(p){for(const id of nums){if(p[id]!==undefined)el(id).value=p[id]}for(const id of texts){if(p[id]!==undefined)el(id).value=p[id]}for(const id of ['end_panel_left','end_panel_right','floor_finish_panels','auto_doors','auto_wall_orient','box_up','top_skirting','waterfall_left','waterfall_right','path_wall_units']){if(p[id]!==undefined)el(id).checked=!!p[id]}syncApplicability();updateSkirtingLabel();}
 function place(){window.sketchup.place(JSON.stringify(collect()))}
+function pathSelected(){window.sketchup.path_selected(JSON.stringify(collect()))}
+function drawPath(){window.sketchup.path_draw(JSON.stringify(collect()))}
 function edit(){window.sketchup.edit(JSON.stringify(collect()))}
 function resize(){const p=collect();window.sketchup.resize_dimensions(JSON.stringify({width:p.width,depth:p.depth,height:p.height}))}
 function updateSkirtingLabel(){el('skirting_value').textContent=el('top_skirting_height').value+' mm'}
@@ -139,7 +156,13 @@ function syncApplicability(){
   const kind=el('kind').value,front=el('front').value,handle=el('handle_style').value;
   const appliance=['fridge_tall','oven_tall','microwave_tall'].includes(kind);
   const doors=['doors','combo'].includes(front),drawers=['drawers','combo'].includes(front);
-  const tall=['wall','tall','fridge_tall','oven_tall','microwave_tall'].includes(kind);
+  const tall=['wall','tall','corner_wall','corner_tall','fridge_tall','oven_tall','microwave_tall'].includes(kind);
+  const island=kind==='island',corner=kind.startsWith('corner_'),path=['base','wall','tall','desk'].includes(kind);
+  ['island_style','island_back_style','waterfall_left','waterfall_right'].forEach(k=>applicability(k,island));
+  ['corner_ownership','corner_filler'].forEach(k=>applicability(k,corner||path));
+  ['path_alignment','path_side','max_carcass_width'].forEach(k=>applicability(k,path));
+  applicability('path_wall_units',kind==='base');
+  applicability('top_shadow_gap',kind==='base');
   ['appliance_width','appliance_height','appliance_bottom','appliance_side_clearance','appliance_rear_clearance','upper_storage'].forEach(k=>applicability(k,appliance));
   ['drawer_count','drawer_shadow_gap','runner_type','runner_length','runner_clearance'].forEach(k=>applicability(k,drawers));
   ['door_count','max_door_width','auto_doors'].forEach(k=>applicability(k,doors));
@@ -147,7 +170,7 @@ function syncApplicability(){
   ['ceiling_height','box_up'].forEach(k=>applicability(k,tall));
   ['top_skirting','top_skirting_height'].forEach(k=>applicability(k,Number(el('top_thickness').value)>0));
   ['toe_height','toe_recess'].forEach(k=>applicability(k,Number(el('toe_height').value)>0||!['wall','desk'].includes(kind)));
-  ['filler_left','filler_right','end_panel_left','end_panel_right','door_gap','front','back','material'].forEach(k=>applicability(k,true));
+  ['filler_left','filler_right','end_panel_left','end_panel_right','end_panel_thickness','door_gap','front','back','material'].forEach(k=>applicability(k,true));
 }
 function bind(){window.sketchup.bind(el('side').value,el('mode').value)}
 window.joineryPreset=function(p){fill(p);didLoadSelection=false;el('action-feedback').textContent='Cabinet preset loaded. Review dimensions before placement.';};
@@ -164,7 +187,7 @@ window.joineryRefresh=function(payload){
 };
 function safe(v){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
 el('kind').addEventListener('change',()=>window.sketchup.preset(el('kind').value));
-['front','handle_style','runner_type','top_skirting','top_thickness','toe_height'].forEach(k=>el(k).addEventListener('change',syncApplicability));
+['front','handle_style','runner_type','top_skirting','top_thickness','toe_height','island_style'].forEach(k=>el(k).addEventListener('change',syncApplicability));
 el('top_skirting_height').addEventListener('input',updateSkirtingLabel);
 document.addEventListener('click',event=>{
   const command=event.target.closest('button[onclick]');
