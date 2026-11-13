@@ -12,7 +12,20 @@ input:focus,select:focus{outline:1px solid #31b6aa}.check{flex-direction:row;ali
 .buttons{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}button{border-radius:6px;background:#2a3a45;border:1px solid #4a5d69;color:#ecf3f7;padding:9px 11px;font-size:12px;cursor:pointer;font-weight:650}button.primary{background:#138d88;border-color:#20a9a2;color:white}button:hover{filter:brightness(1.2)}
 .status{line-height:1.65;font-size:12px;color:#b5c7cf}strong{color:#f4f7fa}.tip{font-size:11px;color:#a7b7c2;line-height:1.55;margin:9px 0 0}.topline{display:flex;justify-content:space-between;align-items:center}
 .command-dock{position:sticky;top:0;z-index:20;background:#162d38;border-color:#27827e;box-shadow:0 4px 17px #060b1399}
-.command-dock button{padding:10px 9px}
+.command-dock{padding:8px 10px!important}
+.command-dock button{padding:7px;min-height:31px}
+.command-row{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.command-row>button{flex:1 1 auto}
+.tool-toggle{flex:0 0 auto}
+.tool-toggle summary{list-style:none;padding:8px 10px;border:1px solid #425361;border-radius:6px;background:#243944;font-size:11px;font-weight:600;cursor:pointer}
+.tool-toggle summary::-webkit-details-marker{display:none}
+.tool-toggle[open]{width:100%}
+.tool-toggle .buttons{display:flex;flex-wrap:wrap;padding:6px 0}
+.tiny-status{font-size:10px;line-height:1.3;color:#9bb3bb;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.advanced-options{margin:10px 0 0;border-top:1px solid #34424c;padding-top:9px}
+.advanced-options summary{font-weight:650;color:#e3e8ea;cursor:pointer}
+.specialized[hidden]{display:none!important}
+.field-note{font-size:10px;color:#9daeb9;line-height:1.5}
 .command-dock .buttons{margin-top:4px;gap:5px}
 .command-dock button.primary{background:#138d88}
 .conditional.is-inactive{opacity:.42}
@@ -33,22 +46,31 @@ input:focus,select:focus{outline:1px solid #31b6aa}.check{flex-direction:row;ali
 }
 @media (max-width:340px){.buttons{gap:5px}section:not(.command-dock) .buttons button{flex-basis:100%}}
 </style></head><body>
-<header><div class="topline"><h1>ArchiBIM <span style="color:#5bd2c9">Joinery</span></h1><span class="badge">BETA 0.3.0</span></div><small>Parametric Cabinets · Desks · Built-ins</small></header>
+<header><div class="topline"><h1>ArchiBIM <span style="color:#5bd2c9">Joinery</span></h1><span class="badge">BETA 0.4.0</span></div><small>Parametric Cabinets · Desks · Built-ins</small></header>
 <main>
-<section class="command-dock"><h2>Cabinet Actions</h2>
-<div class="buttons"><button class="primary" onclick="place()">+ Place New</button><button class="primary" onclick="edit()">Update Selected</button><button onclick="resize()">Resize to W / D / H</button><button onclick="window.sketchup.scale_refresh()">Refresh Native Scale</button><button onclick="window.sketchup.ready()">Load Selected</button></div>
-<div class="buttons"><button class="primary" onclick="pathSelected()">Generate from Selected Lines</button><button onclick="drawPath()">Draw Cabinet Path</button></div>
-<p id="action-feedback" class="info" role="status" aria-live="polite" aria-atomic="true">Ready for cabinet actions.</p>
-<p class="info">To use native Scale: finish the Scale action in SketchUp, select the outer cabinet group, then press Refresh. For reliable resizing without native Scale, edit the dimensions below and press Resize.</p>
-<label class="check"><input id="show_all_options" type="checkbox" onchange="syncApplicability()">Allow advanced / normally irrelevant controls</label></section>
+<section class="command-dock">
+<div class="command-row">
+<button class="primary" onclick="place()">+ Place</button>
+<button class="primary" onclick="edit()">Update</button>
+<button class="primary" onclick="pathSelected()">From Lines</button>
+<details class="tool-toggle"><summary>More ▾</summary><div class="buttons">
+<button onclick="drawPath()">Draw Path</button><button onclick="window.sketchup.ready()">Load Selected</button>
+<button onclick="resize()">Resize W/D/H</button><button onclick="window.sketchup.scale_refresh()">Refresh Native Scale</button>
+</div></details></div>
+<div id="action-feedback" class="tiny-status" role="status" aria-live="polite">Ready</div>
+</section>
 <section><h2>Cabinet Library</h2><div class="grid">
-<label class="span2">Cabinet / built-in family<select id="kind"><optgroup label="Kitchen Cabinets"><option value="base">Base Unit</option><option value="island">Island / Breakfast Bar</option><option value="corner_base">Corner Base Unit</option><option value="corner_wall">Corner Wall / Overhead Unit</option><option value="corner_tall">Corner Tall Unit</option><option value="wall">Wall / Overhead Unit</option><option value="tall">Tall Unit / Pantry</option><option value="fridge_tall">Fridge Tall Unit</option><option value="oven_tall">Oven Tall Unit</option><option value="microwave_tall">Microwave Tall Unit</option></optgroup><optgroup label="Other Built-ins"><option value="desk">Desk / Workstation</option><option value="corner_desk">Corner Desk</option><option value="wardrobe">Wardrobe</option><option value="vanity">Vanity Cabinet</option><option value="bookcase">Bookcase / Shelving</option><option value="tv_console">TV Console</option><option value="reception">Reception Counter</option></optgroup></select></label>
+<label class="span2">Cabinet / built-in family<select id="kind"><optgroup label="Kitchen Cabinets"><option value="base">Base Unit</option><option value="island">Island / Breakfast Bar</option><option value="corner_base">Corner Base Unit</option><option value="corner_wall">Corner Wall / Overhead Unit</option><option value="corner_tall">Corner Tall Unit</option><option value="wall">Wall / Overhead Unit</option><option value="tall">Tall Unit / Pantry</option><option value="fridge_tall">Fridge Tall Unit</option><option value="oven_tall">Oven Tall Unit</option><option value="microwave_tall">Microwave Tall Unit</option></optgroup><optgroup label="Other Built-ins"><option value="desk">Desk / Workstation</option><option value="corner_desk">Corner Desk</option><option value="wardrobe">Wardrobe</option><option value="vanity">Vanity Cabinet</option><option value="basin_vanity">Suspended Basin Vanity + Mirror</option><option value="wall_panel">Wall / TV Feature Panel</option><option value="bookcase">Bookcase / Shelving</option><option value="tv_console">TV Console</option><option value="reception">Reception Counter</option></optgroup></select></label>
 <label class="span2">Description / name<input id="name" type="text" maxlength="120"></label>
 <label>Width (mm)<input id="width" type="number" min="100"></label>
 <label>Overall height (mm)<input id="height" type="number" min="100"></label>
 <label>Overall depth (mm)<input id="depth" type="number" min="100"></label>
 <label>Mount height above host floor (mm)<input id="mount_height" type="number" min="0"></label>
-</div><p class="tip">Base height is measured to the top of the worktop. For a wall cabinet, 1450 mm mounting height gives a 600 mm clear gap above an 850 mm countertop.</p></section>
+</div><p class="tip">Base height includes the worktop. Suspended vanity mount height is its bottom above finished floor. For wall panels, depth is the overall build-out thickness.</p>
+<details class="advanced-options"><summary>Advanced settings</summary>
+<p class="field-note">Enable settings normally unrelated to this cabinet family. Those settings may have no effect on its geometry.</p>
+<label class="check"><input id="show_all_options" type="checkbox" onchange="syncApplicability()">Override family-specific controls</label>
+</details></section>
 <section><h2>Island, Corner &amp; Cabinet Path</h2><div class="grid">
 <label>Island construction<select id="island_style"><option value="open">Open snack bar / support panels</option><option value="carcass">Enclosed storage carcass</option></select></label>
 <label>Island rear / lower back<select id="island_back_style"><option value="low">Lower back panel (200 mm)</option><option value="apron">Upper rear apron (200 mm)</option><option value="full">Full rear back</option><option value="none">No rear panel</option></select></label>
@@ -62,6 +84,27 @@ input:focus,select:focus{outline:1px solid #31b6aa}.check{flex-direction:row;ali
 <label>Handle-free top shadow reveal (mm)<input id="top_shadow_gap" type="number" min="0" max="50"></label>
 <label class="check span2"><input id="path_wall_units" type="checkbox">When tracing base units, also generate separate wall units above</label>
 </div><p class="tip">Selected Lines accepts native SketchUp edges on one horizontal plane, including connected 90° runs. Non-orthogonal turns and closed loops are rejected instead of creating bad joins. Corner modules have two perpendicular fillers, initially 50 mm. Island worktop mitres are true 45° profiles; validate fabrication and supports before manufacturing.</p></section>
+<section id="vanity-section" class="specialized" hidden><h2>Toilet Basin &amp; Mirror</h2><div class="grid">
+<label>Basin style<select id="basin_style"><option value="countertop">Countertop / vessel</option><option value="inset">Inset (concept only)</option><option value="none">No basin</option></select></label>
+<label>Basin width (mm)<input id="basin_width" type="number" min="100"></label>
+<label>Basin depth (mm)<input id="basin_depth" type="number" min="100"></label>
+<label>Basin height above top (mm)<input id="basin_height" type="number" min="0"></label>
+<label class="check"><input id="mirror_enabled" type="checkbox">Include wall mirror</label>
+<label class="check"><input id="mirror_led" type="checkbox">Mirror LED</label>
+<label>Mirror width (mm)<input id="mirror_width" type="number" min="100"></label>
+<label>Mirror height (mm)<input id="mirror_height" type="number" min="100"></label>
+<label>Mirror bottom from floor (mm)<input id="mirror_bottom" type="number" min="0"></label>
+<label>Mirror thickness (mm)<input id="mirror_thickness" type="number" min="2"></label>
+</div><p class="field-note">Floating vanity default mounts 450 mm above floor, with a separate worktop and basin proxy. The mirror stays separately tagged within the editable assembly.</p></section>
+<section id="wall-panel-section" class="specialized" hidden><h2>Wall / TV Feature Panel</h2><div class="grid">
+<label>Vertical panel joints<input id="wall_panel_gaps" type="number" min="0" max="80"></label>
+<label>LED offset (mm)<input id="panel_led_offset" type="number" min="0"></label>
+<label>LED diffuser size (mm)<input id="panel_led_width" type="number" min="3"></label>
+<label class="check"><input id="panel_led_bottom" type="checkbox">Bottom LED</label>
+<label class="check"><input id="panel_led_top" type="checkbox">Top LED</label>
+<label class="check"><input id="panel_led_left" type="checkbox">Left LED</label>
+<label class="check"><input id="panel_led_right" type="checkbox">Right LED</label>
+</div><p class="field-note">Overall depth (default 50 mm) represents the cladding build-out over an existing wall. LEDs are conceptual strips; wiring and thermal clearances need supplier details.</p></section>
 <section><h2>Construction & Materials</h2><div class="grid">
 <label>Carcass panels (mm)<input id="panel_thickness" type="number" min="1"></label>
 <label>Finished end-panel thickness (mm)<input id="end_panel_thickness" type="number" min="1"></label>
@@ -95,15 +138,18 @@ input:focus,select:focus{outline:1px solid #31b6aa}.check{flex-direction:row;ali
 <label class="check"><input id="end_panel_left" type="checkbox">Finished left end panel</label>
 <label class="check"><input id="end_panel_right" type="checkbox">Finished right end panel</label>
 </div>
-<p class="tip">Create, update and resize actions stay at the top while scrolling.</p>
+<p class="tip">Select each generated group to update its parameters independently.</p>
 <p class="tip">Generated panels remain separate named SketchUp groups with joinery metadata. Update Selected regenerates the assembly from its parameters.</p></section>
 <section><h2>Doors, Handles &amp; Appliance Units</h2><div class="grid">
 <label class="check"><input id="floor_finish_panels" type="checkbox" checked>Floor-length fillers &amp; end panels</label>
 <label class="check"><input id="auto_doors" type="checkbox" checked>Auto split doors to max width</label>
 <label>Maximum door width (mm)<input id="max_door_width" type="number" min="200" max="1500"></label>
-<label>Hardware / edge style<select id="handle_style"><option value="none">No handle</option><option value="edge_45">45° horizontal top grip + 20 mm shadow gap</option><option value="bar">Shop-bought bar pull</option><option value="knob">Shop-bought knob</option></select></label>
+<label>Hardware / edge style<select id="handle_style"><option value="none">No handle</option><option value="edge_45">45° finger grip (unit-dependent)</option><option value="center_groove">Mid-height recessed groove</option><option value="bar">Shop-bought bar pull</option><option value="knob">Shop-bought knob</option></select></label>
 <label>Handle offset from opening edge (mm)<input id="handle_offset" type="number" min="0"></label>
 <label>Bar handle screw centres (mm)<input id="handle_cc" type="number" min="0"></label>
+<label>Middle grip centre above floor (mm)<input id="groove_center_height" type="number" min="50"></label>
+<label>Middle grip groove height (mm)<input id="groove_height" type="number" min="5" max="60"></label>
+<label>Middle grip groove depth (mm)<input id="groove_depth" type="number" min="3"></label>
 <label>Appliance nominal width (mm)<input id="appliance_width" type="number" min="0"></label>
 <label>Appliance nominal height (mm)<input id="appliance_height" type="number" min="0"></label>
 <label>Appliance opening bottom (mm)<input id="appliance_bottom" type="number" min="0"></label>
@@ -112,7 +158,7 @@ input:focus,select:focus{outline:1px solid #31b6aa}.check{flex-direction:row;ali
 <label>Storage above appliance<select id="upper_storage"><option value="none">None</option><option value="open">Open</option><option value="doors">Closed doors</option></select></label>
 <label class="check"><input id="box_up" type="checkbox">Box up to ceiling</label>
 <label>Ceiling level above floor (mm)<input id="ceiling_height" type="number" min="0"></label>
-</div><p class="tip">Appliance dimensions are placeholders, not appliance installation approvals. Check exact model's cutout, airflow, power and door swing instructions. 45° integrated grips bevel the upper rear edge of the front, leaving a finger-access chamfer behind the visible face.</p></section>
+</div><p class="tip">Appliance dimensions are placeholders, not appliance installation approvals. Check exact model's cutout, airflow, power and door swing instructions. Tall and wardrobe doors can use a middle groove; overhead wall units do not automatically get a top shadow gap.</p></section>
 <section><h2>Scale &amp; 2D Documentation</h2>
 <p class="tip">Finish SketchUp's native Scale tool, then select the OUTER cabinet group and click Refresh. The body is rebuilt at the new width/depth/height while keeping panel material thickness unchanged. Mirroring and shear are not supported.</p>
 <div class="buttons"><button onclick="window.sketchup.scale_refresh()">Refresh After Native Scale</button><button onclick="window.sketchup.dxf()">Selected DXF (Plan + Elevation)</button><button onclick="window.sketchup.dxf_all()">Batch DXF for All Cabinets</button><button onclick="window.sketchup.mcp_json()">Export AI / MCP JSON</button></div>
@@ -127,6 +173,8 @@ input:focus,select:focus{outline:1px solid #31b6aa}.check{flex-direction:row;ali
 <p class="tip">To bind: Ctrl-select one generated cabinet AND one ArchiBIM wall in SketchUp, choose exposed face, then Bind. The cabinet snaps its back to the wall's physical face. Auto-sync executes after a completed SketchUp operation, not during dragging.</p>
 </section>
 <section><h2>Quantities & Diagnostics</h2><div id="status" class="status" role="status" aria-live="polite" aria-atomic="true">Open a model or select a cabinet.</div>
+<div class="buttons"><button class="primary" onclick="exportDiagnostics()">Export Diagnosis + UI Logs ZIP</button></div>
+<p class="field-note">Bundles model validation, UI interactions, plugin errors, session log and viewport screenshot where supported.</p>
 <div class="buttons"><button onclick="window.sketchup.export()">Export Preliminary Cutlist CSV</button><button onclick="window.sketchup.schedule()">Export BIM Cabinet Schedule CSV</button></div>
 <p class="tip">Runner installation clearances and manufacturing dimensions are provisional; verify manufacturer-specific technical sheets. Confirm specified hardware, joinery, grain direction, edge banding and panel machining before sending to fabrication.</p></section>
 </main>
