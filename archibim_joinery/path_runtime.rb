@@ -113,7 +113,10 @@ module SSDigitalLab
         model=Sketchup.active_model
         edges=model.selection.grep(Sketchup::Edge)
         raise ArgumentError,'Select native SketchUp edges, then click Generate From Lines' if edges.empty?
-        pairs=edges.map { |e| [e.start.position.to_a.map(&:to_mm),e.end.position.to_a.map(&:to_mm)] }
+        pairs=edges.map do |e|
+          a=e.start.position; b=e.end.position
+          [[a.x.to_mm,a.y.to_mm,a.z.to_mm],[b.x.to_mm,b.y.to_mm,b.z.to_mm]]
+        end
         paths=PathPlanner.ordered_paths(pairs)
         create_from_path_points(params,paths)
       end
