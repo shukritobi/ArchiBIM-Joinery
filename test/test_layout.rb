@@ -88,7 +88,7 @@ class JoineryLayoutV03Test < Minitest::Test
     [1300, 1900, 2400, 2500, 3200, 4200].each do |width|
       a=C.parts(preset('base',width:width,front:'doors'))
       doors=a.select { |r| r['role']=='door' }
-      modules=a.select { |r| r['key'].match?(/module-\\d+-left/) }
+      modules=a.select { |r| r['key'].match?(/module-\d+-left/) }
       assert modules.length>=2, "expected several carcasses at #{width}mm"
       modules.each do |side|
         n=side.fetch('module')
