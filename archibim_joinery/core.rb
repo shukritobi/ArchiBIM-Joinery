@@ -80,7 +80,9 @@ module SSDigitalLab
         h['shelves'] = 0 if h['front'] == 'drawers'
         h['material'] = h.fetch('material', 'White Melamine').to_s[0, 120]
         h['top_material'] = h.fetch('top_material', 'Countertop').to_s[0, 120]
-        w = h['width'] - h['filler_left'] - h['filler_right'] - h['panel_thickness'] * (((h['end_panel_left'] ? 1 : 0) + (h['end_panel_right'] ? 1 : 0)))
+        h['end_panel_thickness'] = value(h,'end_panel_thickness',1,100_000) if h.key?('end_panel_thickness')
+        end_t = h.fetch('end_panel_thickness',h['panel_thickness'])
+        w = h['width'] - h['filler_left'] - h['filler_right'] - end_t * (((h['end_panel_left'] ? 1 : 0) + (h['end_panel_right'] ? 1 : 0)))
         t = h['panel_thickness']
         raise ArgumentError, 'Width too small for carcass and fillers' if w < (t * (h['divisions'] + 2)) + 100
         raise ArgumentError, 'Depth too small for carcass and back' if h['depth'] < [t * 4, h['back_thickness'] + h['back_recess'] + 30].max
@@ -108,8 +110,9 @@ module SSDigitalLab
                       'w'=>w.round(4), 'd'=>d.round(4), 'h'=>h.round(4) }
         end
         t = p['panel_thickness']; ft = p['front_thickness']; gap = p['door_gap']
-        x0 = p['filler_left'] + (p['end_panel_left'] ? t : 0)
-        cw = p['width'] - p['filler_left'] - p['filler_right'] - (p['end_panel_left'] ? t : 0) - (p['end_panel_right'] ? t : 0)
+        et = p.fetch('end_panel_thickness',t)
+        x0 = p['filler_left'] + (p['end_panel_left'] ? et : 0)
+        cw = p['width'] - p['filler_left'] - p['filler_right'] - (p['end_panel_left'] ? et : 0) - (p['end_panel_right'] ? et : 0)
         floor_z = p['toe_height']; ch = p['height'] - floor_z - p['top_thickness']
         depth = p['depth']; is_desk = p['kind'] == 'desk'
         case_y = p['front'] == 'open' ? 0.0 : ft
@@ -176,11 +179,11 @@ module SSDigitalLab
                       p['filler_right'], t, ch, 'filler')
         end
         if p['end_panel_left']
-          append.call('end-left', 'Finished Left End Panel', p['filler_left'], 0, floor_z, t, depth, ch, 'finish')
+          append.call('end-left', 'Finished Left End Panel', p['filler_left'], 0, floor_z, et, depth, ch, 'finish')
         end
         if p['end_panel_right']
-          append.call('end-right', 'Finished Right End Panel', p['width']-p['filler_right']-t, 0, floor_z,
-                      t, depth, ch, 'finish')
+          append.call('end-right', 'Finished Right End Panel', p['width']-p['filler_right']-et, 0, floor_z,
+                      et, depth, ch, 'finish')
         end
         if p['backsplash_height'] > 0
           append.call('backsplash', 'Physical Backsplash', 0, depth-t, p['height'], p['width'], t,
