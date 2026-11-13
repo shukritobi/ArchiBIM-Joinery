@@ -93,7 +93,7 @@ module SSDigitalLab
 
         def case_width(p)
           p['width']-p['filler_left']-p['filler_right']-
-            p['panel_thickness']*((p['end_panel_left'] ? 1 : 0)+(p['end_panel_right'] ? 1 : 0))
+            p.fetch('end_panel_thickness',p['panel_thickness'])*((p['end_panel_left'] ? 1 : 0)+(p['end_panel_right'] ? 1 : 0))
         end
 
         def parts(raw)
@@ -137,7 +137,8 @@ module SSDigitalLab
 
         def appliance_parts(p)
           out=[]; t=p['panel_thickness']; ft=p['front_thickness']; toe=p['toe_height']
-          x0=p['filler_left']+(p['end_panel_left'] ? t : 0); cw=case_width(p)
+          et=p.fetch('end_panel_thickness',t)
+          x0=p['filler_left']+(p['end_panel_left'] ? et : 0); cw=case_width(p)
           bottom=[p['appliance_bottom'],toe+t].max
           top=bottom+p['appliance_height']
           d=p['depth']; y=ft
@@ -166,10 +167,10 @@ module SSDigitalLab
             add_part(out,'filler-right','Right Filler',p['width']-p['filler_right'],0,toe,p['filler_right'],t,p['height']-toe,'filler',p)
           end
           if p['end_panel_left']
-            add_part(out,'end-left','Left Finished Panel',p['filler_left'],0,toe,t,d,p['height']-toe,'finish',p)
+            add_part(out,'end-left','Left Finished Panel',p['filler_left'],0,toe,et,d,p['height']-toe,'finish',p)
           end
           if p['end_panel_right']
-            add_part(out,'end-right','Right Finished Panel',p['width']-p['filler_right']-t,0,toe,t,d,p['height']-toe,'finish',p)
+            add_part(out,'end-right','Right Finished Panel',p['width']-p['filler_right']-et,0,toe,et,d,p['height']-toe,'finish',p)
           end
           out
         end
