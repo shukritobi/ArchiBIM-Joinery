@@ -55,10 +55,22 @@ module SSDigitalLab
           end
           layouts.each do |config,layout|
             layout['runs'].each do |run|
-              h=config.merge('width'=>run['length'],
-                             'end_panel_left'=>false,'end_panel_right'=>false,
-                             'filler_left'=>0,'filler_right'=>0)
-              jobs << [Core.normalize(h),run]
+              # Very long path legs must not hit the 12-door ceiling or produce
+              # a single oversized root Group. Each run is independently editable.
+              count=(run['length']/4800.0).ceil
+              step_length=run['length']/count
+              count.times do |idx|
+                unit=run.dup
+                unit['length']=step_length
+                origin=run['origin']
+                u=run['xaxis']
+                unit['origin']=[origin[0]+u[0]*step_length*idx,
+                                origin[1]+u[1]*step_length*idx,origin[2]]
+                h=config.merge('width'=>step_length,
+                               'end_panel_left'=>false,'end_panel_right'=>false,
+                               'filler_left'=>0,'filler_right'=>0)
+                jobs << [Core.normalize(h),unit]
+              end
             end
             layout['corners'].each do |corner|
               corner_kind='corner_'+config['kind']
@@ -78,6 +90,7 @@ module SSDigitalLab
         # a later segment failure from leaving a half-generated installation.
         jobs.each { |config,_| Core.parts(config) }
         model=Sketchup.active_model
+        raise ArgumentError,'Exit group/component editing before generating cabinet paths' if model.active_path && !model.active_path.empty?
         model.start_operation('ArchiBIM Joinery: Cabinet Paths',true)
         groups=[]
         begin
