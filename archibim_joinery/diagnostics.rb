@@ -166,8 +166,11 @@ module SSDigitalLab
           central << filename
         end
         count=entries.size
-        local << central << [0x06054b50,0,0,count,count,
-                             central.bytesize,local.bytesize,0].pack('VvvvvVVv')
+        central_offset=local.bytesize
+        local << central
+        local << [0x06054b50,0,0,count,count,
+                  central.bytesize,central_offset,0].pack('VvvvvVVv')
+        local
       end
 
       def export_diagnostic_bundle
