@@ -21,7 +21,7 @@ input:focus,select:focus{outline:1px solid #31b6aa}.check{flex-direction:row;ali
 .tool-toggle summary::-webkit-details-marker{display:none}
 .tool-toggle[open]{width:100%}
 .tool-toggle .buttons{display:flex;flex-wrap:wrap;padding:6px 0}
-.tiny-status{font-size:10px;line-height:1.3;color:#9bb3bb;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.command-dock #action-feedback{font-size:10px;line-height:1.3;color:#9bb3bb;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .advanced-options{margin:10px 0 0;border-top:1px solid #34424c;padding-top:9px}
 .advanced-options summary{font-weight:650;color:#e3e8ea;cursor:pointer}
 .specialized[hidden]{display:none!important}
@@ -57,7 +57,7 @@ input:focus,select:focus{outline:1px solid #31b6aa}.check{flex-direction:row;ali
 <button onclick="drawPath()">Draw Path</button><button onclick="window.sketchup.eyedropper()">Eyedropper · Match Settings</button><button onclick="window.sketchup.ready()">Load Selected</button>
 <button onclick="resize()">Resize W/D/H</button><button onclick="window.sketchup.scale_refresh()">Refresh Native Scale</button>
 </div></details></div>
-<div id="action-feedback" class="tiny-status" role="status" aria-live="polite">Ready</div>
+<div id="action-feedback" class="info" role="status" aria-live="polite">Ready</div>
 </section>
 <section><h2>Cabinet Library</h2><div class="grid">
 <label class="span2">Cabinet / built-in family<select id="kind"><optgroup label="Kitchen Cabinets"><option value="base">Base Unit</option><option value="island">Island / Breakfast Bar</option><option value="corner_base">Corner Base Unit</option><option value="corner_wall">Corner Wall / Overhead Unit</option><option value="corner_tall">Corner Tall Unit</option><option value="wall">Wall / Overhead Unit</option><option value="tall">Tall Unit / Pantry</option><option value="fridge_tall">Fridge Tall Unit</option><option value="oven_tall">Oven Tall Unit</option><option value="microwave_tall">Microwave Tall Unit</option></optgroup><optgroup label="Other Built-ins"><option value="desk">Desk / Workstation</option><option value="corner_desk">Corner Desk</option><option value="wardrobe">Wardrobe</option><option value="vanity">Vanity Cabinet</option><option value="basin_vanity">Suspended Basin Vanity + Mirror</option><option value="wall_panel">Wall / TV Feature Panel</option><option value="bookcase">Bookcase / Shelving</option><option value="tv_console">TV Console</option><option value="reception">Reception Counter</option></optgroup></select></label>
