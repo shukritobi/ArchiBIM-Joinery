@@ -35,6 +35,8 @@ module SSDigitalLab
             p['panel_thickness'] = 20
             p['top_material'] = 'Countertop'
             p['auto_wall_orient'] = false
+          elsif kind == 'corner_wall'
+            p['mount_height'] = 1450
           end
           p
         end
@@ -76,7 +78,7 @@ module SSDigitalLab
         def parts(raw)
           p = normalize(raw)
           if p['kind'] == 'island'
-            return island_parts(p)
+            return island_parts(p, super(p))
           end
           if p['kind'].start_with?('corner_')
             return corner_parts(p)
@@ -91,11 +93,11 @@ module SSDigitalLab
           result
         end
 
-        def island_parts(p)
+        def island_parts(p, base_parts)
           out=[]
           t=p['top_thickness']; w=p['width']; d=p['depth']; h=p['height']
           if p['island_style']=='carcass'
-            out=super(p)
+            out=base_parts
           else
             # An open snack bar: support is modelled separately, never assumed from stone.
             if p['end_panel_left'] && !p['waterfall_left']
